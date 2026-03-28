@@ -327,12 +327,7 @@ export default async function handler(req, res) {
 
     const hideParams = req.query.hide
       ? req.query.hide.split(",")
-      : [
-          "stars",
-          "discussions_started",
-          "discussions_answered",
-          "organizations",
-        ];
+      : ["stars", "discussions_started", "discussions_answered", "orgs"];
     const svg = renderStatsCard(stats, {
       show_icons: showIcons,
       theme,
