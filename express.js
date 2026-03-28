@@ -18,6 +18,7 @@ import langCard from "./api/top-langs.js";
 import wakatimeCard from "./api/wakatime.js";
 import gistCard from "./api/gist.js";
 import devtoCard from "./api/devto-card.js";
+import devtoSingleCard from "./api/devto-single-card.js";
 import githubStatsCard from "./api/github-stats.js";
 import taglineCard from "./api/tagline-card.js";
 import express from "express";
@@ -32,6 +33,7 @@ router.get("/top-langs", langCard);
 router.get("/wakatime", wakatimeCard);
 router.get("/gist", gistCard);
 router.get("/devto-card", devtoCard);
+router.get("/devto-single-card", devtoSingleCard);
 router.get("/github-stats", githubStatsCard);
 router.get("/tagline-card", taglineCard);
 

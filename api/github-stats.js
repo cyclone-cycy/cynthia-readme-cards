@@ -121,7 +121,6 @@ export default async function handler(req, res) {
 
   const showIcons = req.query.show_icons !== "false";
   const theme = req.query.theme || "dark";
-  const titleColor = req.query.title_color || "53F7AE";
 
   try {
     let githubStats = {};
@@ -332,12 +331,19 @@ export default async function handler(req, res) {
     const svg = renderStatsCard(stats, {
       show_icons: showIcons,
       theme,
-      title_color: titleColor,
+      title_color: req.query.title_color || "53F7AE",
+      text_color: req.query.text_color,
+      icon_color: req.query.icon_color,
+      ring_color: req.query.ring_color,
+      bg_color: req.query.bg_color,
       hide_border: req.query.hide_border === "true",
       include_all_commits: true,
       hide: hideParams,
       number_format: "long",
-      custom_title: "GitHub Stats",
+      custom_title:
+        req.query.custom_title === undefined
+          ? "GitHub Stats"
+          : req.query.custom_title,
     });
 
     res.setHeader("Content-Type", "image/svg+xml");
