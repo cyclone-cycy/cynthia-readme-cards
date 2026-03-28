@@ -26,6 +26,28 @@
 // ---------------------------------------------------------------------------
 
 /**
+ * Fetch a remote image and return it as a base64 data URI.
+ * Falls back to null if the fetch fails so the card can render without it.
+ *
+ * @param {string} url Remote image URL.
+ * @returns {Promise<string|null>} Data URI or null.
+ */
+async function fetchImageAsBase64(url) {
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) {
+      return null;
+    }
+    const contentType = resp.headers.get("content-type") || "image/jpeg";
+    const buffer = await resp.arrayBuffer();
+    const base64 = Buffer.from(buffer).toString("base64");
+    return `data:${contentType};base64,${base64}`;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Escape XML-special characters so text is safe inside SVG.
  *
  * @param {string} str Raw string.
@@ -143,6 +165,7 @@ function renderCard(article, xOffset, opts = {}) {
     isPinned = false,
     titleColor = "#53F7AE",
     tagColor = "#888",
+    coverDataUri = null,
   } = opts;
 
   const x = xOffset; // left edge of the card rect
@@ -157,11 +180,11 @@ function renderCard(article, xOffset, opts = {}) {
     `<rect x="${x}" y="5" width="${cardW}" height="${cardH}" rx="8" fill="#1a1a1a" stroke="#53F7AE" stroke-width="1"/>`,
   );
 
-  // --- Cover image (if available and enabled) ---
-  const hasCover = showCover && article.cover_image;
+  // --- Cover image (base64 data URI to bypass GitHub CSP) ---
+  const hasCover = showCover && coverDataUri;
   if (hasCover) {
     parts.push(
-      `<image x="${inner}" y="10" width="260" height="70" href="${article.cover_image}" preserveAspectRatio="xMidYMid slice"/>`,
+      `<image x="${inner}" y="10" width="260" height="70" href="${coverDataUri}" preserveAspectRatio="xMidYMid slice"/>`,
     );
   }
 
@@ -295,16 +318,25 @@ export default async function handler(req, res) {
     const showReadTime =
       (process.env.PINNED_SHOW_READ_TIME || "true") === "true";
 
+    // --- Fetch cover images as base64 (GitHub CSP blocks external URLs in SVG) ---
+    const [cover1, coverPinned, cover3] = await Promise.all([
+      article1.cover_image ? fetchImageAsBase64(article1.cover_image) : null,
+      pinnedArticle.cover_image
+        ? fetchImageAsBase64(pinnedArticle.cover_image)
+        : null,
+      article3.cover_image ? fetchImageAsBase64(article3.cover_image) : null,
+    ]);
+
     // --- Build 3-card SVG ---
     const svg = `<svg width="840" height="230" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
       <!-- Card 1: Left — Article index ${card1Idx + 1} -->
-      ${renderCard(article1, 5, { showCover: true, showTags: true, showReadTime: true, showReactions: card1ShowReactions, isPinned: false })}
+      ${renderCard(article1, 5, { showCover: true, showTags: true, showReadTime: true, showReactions: card1ShowReactions, isPinned: false, coverDataUri: cover1 })}
 
       <!-- Card 2: Middle — PINNED article index ${pinnedIdx + 1} -->
-      ${renderCard(pinnedArticle, 285, { showCover, showTags, showReadTime, showReactions: card2ShowReactions, isPinned: true })}
+      ${renderCard(pinnedArticle, 285, { showCover, showTags, showReadTime, showReactions: card2ShowReactions, isPinned: true, coverDataUri: coverPinned })}
 
       <!-- Card 3: Right — Article index ${card3Idx + 1} -->
-      ${renderCard(article3, 565, { showCover: true, showTags: true, showReadTime: true, showReactions: card3ShowReactions, isPinned: false })}
+      ${renderCard(article3, 565, { showCover: true, showTags: true, showReadTime: true, showReactions: card3ShowReactions, isPinned: false, coverDataUri: cover3 })}
     </svg>`;
 
     res.setHeader("Content-Type", "image/svg+xml");

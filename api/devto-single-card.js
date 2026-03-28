@@ -22,6 +22,27 @@
 // ---------------------------------------------------------------------------
 
 /**
+ * Fetch a remote image and return it as a base64 data URI.
+ *
+ * @param {string} url Remote image URL.
+ * @returns {Promise<string|null>} Data URI or null.
+ */
+async function fetchImageAsBase64(url) {
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) {
+      return null;
+    }
+    const contentType = resp.headers.get("content-type") || "image/jpeg";
+    const buffer = await resp.arrayBuffer();
+    const base64 = Buffer.from(buffer).toString("base64");
+    return `data:${contentType};base64,${base64}`;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Escape XML-special characters for SVG safety.
  *
  * @param {string} str Raw string.
@@ -152,9 +173,14 @@ export default async function handler(req, res) {
     const article =
       articles[Math.min(index, articles.length - 1)] || articles[0];
 
+    // --- Fetch cover image as base64 (GitHub CSP blocks external URLs) ---
+    const coverDataUri = article.cover_image
+      ? await fetchImageAsBase64(article.cover_image)
+      : null;
+
     // --- Build single-card SVG ---
     const inner = 5; // inner padding from left edge
-    const hasCover = !!article.cover_image;
+    const hasCover = !!coverDataUri;
     let parts = [];
 
     // Background
@@ -165,7 +191,7 @@ export default async function handler(req, res) {
     // Cover image
     if (hasCover) {
       parts.push(
-        `<image x="${inner}" y="5" width="${cardW - 10}" height="70" href="${article.cover_image}" preserveAspectRatio="xMidYMid slice"/>`,
+        `<image x="${inner}" y="5" width="${cardW - 10}" height="70" href="${coverDataUri}" preserveAspectRatio="xMidYMid slice"/>`,
       );
     }
 
