@@ -15,16 +15,26 @@ const data_langs = {
       repositories: {
         nodes: [
           {
+            name: "repo1",
+            isFork: false,
             languages: {
-              edges: [{ size: 150, node: { color: "#0f0", name: "HTML" } }],
+              edges: [
+                { size: 150, node: { color: "#3572A5", name: "Python" } },
+              ],
             },
           },
           {
+            name: "repo2",
+            isFork: false,
             languages: {
-              edges: [{ size: 100, node: { color: "#0f0", name: "HTML" } }],
+              edges: [
+                { size: 100, node: { color: "#3572A5", name: "Python" } },
+              ],
             },
           },
           {
+            name: "repo3",
+            isFork: false,
             languages: {
               edges: [
                 { size: 100, node: { color: "#0ff", name: "javascript" } },
@@ -32,6 +42,8 @@ const data_langs = {
             },
           },
           {
+            name: "repo4",
+            isFork: false,
             languages: {
               edges: [
                 { size: 100, node: { color: "#0ff", name: "javascript" } },
@@ -39,6 +51,9 @@ const data_langs = {
             },
           },
         ],
+      },
+      pullRequests: {
+        nodes: [],
       },
     },
   },
@@ -56,9 +71,9 @@ const error = {
 };
 
 const langs = {
-  HTML: {
-    color: "#0f0",
-    name: "HTML",
+  Python: {
+    color: "#3572A5",
+    name: "Python",
     size: 250,
   },
   javascript: {

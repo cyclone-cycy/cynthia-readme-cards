@@ -36,6 +36,10 @@ export type StatsData = {
   totalDiscussionsStarted: number;
   totalDiscussionsAnswered: number;
   contributedTo: number;
+  totalOrganizations: number;
+  totalArticles: number;
+  publicGists: number;
+  forkedRepos: number;
   rank: { level: string; percentile: number };
 };
 

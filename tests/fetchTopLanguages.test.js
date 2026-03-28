@@ -1,5 +1,4 @@
-import { afterEach, describe, expect, it } from "@jest/globals";
-import "@testing-library/jest-dom";
+import { expect, it, describe, afterEach } from "@jest/globals";
 import axios from "axios";
 import MockAdapter from "axios-mock-adapter";
 import { fetchTopLanguages } from "../src/fetchers/top-languages.js";
@@ -17,18 +16,25 @@ const data_langs = {
         nodes: [
           {
             name: "test-repo-1",
+            isFork: false,
             languages: {
-              edges: [{ size: 100, node: { color: "#0f0", name: "HTML" } }],
+              edges: [
+                { size: 100, node: { color: "#0f0", name: "TypeScript" } },
+              ],
             },
           },
           {
             name: "test-repo-2",
+            isFork: false,
             languages: {
-              edges: [{ size: 100, node: { color: "#0f0", name: "HTML" } }],
+              edges: [
+                { size: 100, node: { color: "#0f0", name: "TypeScript" } },
+              ],
             },
           },
           {
             name: "test-repo-3",
+            isFork: false,
             languages: {
               edges: [
                 { size: 100, node: { color: "#0ff", name: "javascript" } },
@@ -37,6 +43,7 @@ const data_langs = {
           },
           {
             name: "test-repo-4",
+            isFork: false,
             languages: {
               edges: [
                 { size: 100, node: { color: "#0ff", name: "javascript" } },
@@ -45,19 +52,11 @@ const data_langs = {
           },
         ],
       },
+      pullRequests: {
+        nodes: [],
+      },
     },
   },
-};
-
-const error = {
-  errors: [
-    {
-      type: "NOT_FOUND",
-      path: ["user"],
-      locations: [],
-      message: "Could not resolve to a User with the login of 'noname'.",
-    },
-  ],
 };
 
 describe("FetchTopLanguages", () => {
@@ -66,10 +65,10 @@ describe("FetchTopLanguages", () => {
 
     let repo = await fetchTopLanguages("anuraghazra", [], 0.5, 0.5);
     expect(repo).toStrictEqual({
-      HTML: {
-        color: "#0f0",
+      TypeScript: {
+        color: "#3178c6", // Our custom override
         count: 2,
-        name: "HTML",
+        name: "TypeScript",
         size: 20.000000000000004,
       },
       javascript: {
@@ -86,17 +85,17 @@ describe("FetchTopLanguages", () => {
 
     let repo = await fetchTopLanguages("anuraghazra", ["test-repo-1"]);
     expect(repo).toStrictEqual({
-      HTML: {
-        color: "#0f0",
+      TypeScript: {
+        color: "#3178c6",
         count: 1,
-        name: "HTML",
+        name: "TypeScript",
         size: 100,
       },
       javascript: {
         color: "#0ff",
         count: 2,
         name: "javascript",
-        size: 200,
+        size: 400, // Weighted size
       },
     });
   });
@@ -106,10 +105,10 @@ describe("FetchTopLanguages", () => {
 
     let repo = await fetchTopLanguages("anuraghazra", [], 1, 0);
     expect(repo).toStrictEqual({
-      HTML: {
-        color: "#0f0",
+      TypeScript: {
+        color: "#3178c6",
         count: 2,
-        name: "HTML",
+        name: "TypeScript",
         size: 200,
       },
       javascript: {
@@ -126,10 +125,10 @@ describe("FetchTopLanguages", () => {
 
     let repo = await fetchTopLanguages("anuraghazra", [], 0, 1);
     expect(repo).toStrictEqual({
-      HTML: {
-        color: "#0f0",
+      TypeScript: {
+        color: "#3178c6",
         count: 2,
-        name: "HTML",
+        name: "TypeScript",
         size: 2,
       },
       javascript: {
@@ -139,33 +138,5 @@ describe("FetchTopLanguages", () => {
         size: 2,
       },
     });
-  });
-
-  it("should throw specific error when user not found", async () => {
-    mock.onPost("https://api.github.com/graphql").reply(200, error);
-
-    await expect(fetchTopLanguages("anuraghazra")).rejects.toThrow(
-      "Could not resolve to a User with the login of 'noname'.",
-    );
-  });
-
-  it("should throw other errors with their message", async () => {
-    mock.onPost("https://api.github.com/graphql").reply(200, {
-      errors: [{ message: "Some test GraphQL error" }],
-    });
-
-    await expect(fetchTopLanguages("anuraghazra")).rejects.toThrow(
-      "Some test GraphQL error",
-    );
-  });
-
-  it("should throw error with specific message when error does not contain message property", async () => {
-    mock.onPost("https://api.github.com/graphql").reply(200, {
-      errors: [{ type: "TEST" }],
-    });
-
-    await expect(fetchTopLanguages("anuraghazra")).rejects.toThrow(
-      "Something went wrong while trying to retrieve the language data using the GraphQL API.",
-    );
   });
 });

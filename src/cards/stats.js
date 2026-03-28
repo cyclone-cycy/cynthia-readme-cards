@@ -1,3 +1,8 @@
+/**
+ * @module StatsCardRenderer
+ * @description Visual renderer for the GitHub Statistics card.
+ */
+
 // @ts-check
 
 import { Card } from "../common/Card.js";
@@ -264,9 +269,13 @@ const renderStatsCard = (stats, options = {}) => {
     totalPRsMerged,
     mergedPRsPercentage,
     totalReviews,
+    totalOrganizations,
     totalDiscussionsStarted,
     totalDiscussionsAnswered,
     contributedTo,
+    totalArticles,
+    publicGists,
+    forkedRepos,
     rank,
   } = stats;
   const {
@@ -380,9 +389,32 @@ const renderStatsCard = (stats, options = {}) => {
 
   STATS.issues = {
     icon: icons.issues,
-    label: i18n.t("statcard.issues"),
+    label: "Public Issues", // Changed from i18n.t("statcard.issues") to be explicit
     value: totalIssues,
     id: "issues",
+  };
+
+  // Add Gists support
+  STATS.gists = {
+    icon: icons.star, // Using star icon to differentiate from articles
+    label: "Public Gists",
+    value: publicGists || 0,
+    id: "gists",
+  };
+
+  // Add Forks support
+  STATS.forks = {
+    icon: icons.fork,
+    label: "Forks",
+    value: forkedRepos || 0,
+    id: "forks",
+  };
+
+  STATS.articles = {
+    icon: icons.gist,
+    label: "Articles",
+    value: totalArticles,
+    id: "articles",
   };
 
   if (show.includes("discussions_started")) {
@@ -401,6 +433,13 @@ const renderStatsCard = (stats, options = {}) => {
       id: "discussions_answered",
     };
   }
+
+  STATS.orgs = {
+    icon: icons.contribs,
+    label: "Organizations",
+    value: totalOrganizations,
+    id: "orgs",
+  };
 
   STATS.contribs = {
     icon: icons.contribs,

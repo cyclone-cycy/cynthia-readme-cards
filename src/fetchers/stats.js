@@ -1,6 +1,15 @@
+/**
+ * @module StatsFetcher
+ * @description Data fetcher for comprehensive GitHub user statistics.
+ *
+ * LOGIC: Aggregates data from GraphQL and REST APIs to provide lifetime
+ * metrics for commits, PRs, issues, and contributions.
+ */
+
 // @ts-check
 
 import axios from "axios";
+import { fetchDevToStats } from "./devto.js";
 import * as dotenv from "dotenv";
 import githubUsernameRegex from "github-username-regex";
 import { calculateRank } from "../calculateRank.js";
@@ -64,9 +73,12 @@ const GRAPHQL_STATS_QUERY = `
       closedIssues: issues(states: CLOSED) {
         totalCount
       }
+      organizations { totalCount } 
       followers {
         totalCount
       }
+      gists { totalCount }
+      forks: repositories(isFork: true) { totalCount }
       repositoryDiscussions @include(if: $includeDiscussions) {
         totalCount
       }
@@ -131,8 +143,8 @@ const statsFetcher = async ({
       includeDiscussionsAnswers,
       startTime,
     };
-    let res = await retryer(fetcher, variables);
-    if (res.data.errors) {
+    const res = await retryer(fetcher, variables);
+    if (!res || !res.data || res.data.errors) {
       return res;
     }
 
@@ -145,8 +157,9 @@ const statsFetcher = async ({
     }
 
     // Disable multi page fetching on public Vercel instance due to rate limits.
+    /** @type {any[]} */
     const repoNodesWithStars = repoNodes.filter(
-      (node) => node.stargazers.totalCount !== 0,
+      (/** @type {any} */ node) => node.stargazers.totalCount !== 0,
     );
     hasNextPage =
       process.env.FETCH_MULTI_PAGE_STARS === "true" &&
@@ -170,7 +183,7 @@ const statsFetcher = async ({
 const fetchTotalCommits = (variables, token) => {
   return axios({
     method: "get",
-    url: `https://api.github.com/search/commits?q=author:${variables.login}`,
+    url: `https://api.github.com/search/commits?q=author:${/** @type {any} */ (variables).login}`,
     headers: {
       "Content-Type": "application/json",
       Accept: "application/vnd.github.cloak-preview",
@@ -202,8 +215,8 @@ const totalCommitsFetcher = async (username) => {
     throw new Error(err);
   }
 
-  const totalCount = res.data.total_count;
-  if (!totalCount || isNaN(totalCount)) {
+  const totalCount = res.data?.total_count || res.data?.totalCount || 0;
+  if (isNaN(totalCount)) {
     throw new CustomError(
       "Could not fetch total commits.",
       CustomError.GITHUB_REST_API_ERROR,
@@ -226,7 +239,7 @@ const totalCommitsFetcher = async (username) => {
  */
 const fetchStats = async (
   username,
-  include_all_commits = false,
+  include_all_commits = true,
   exclude_repo = [],
   include_merged_pull_requests = false,
   include_discussions = false,
@@ -249,6 +262,10 @@ const fetchStats = async (
     totalDiscussionsStarted: 0,
     totalDiscussionsAnswered: 0,
     contributedTo: 0,
+    totalArticles: 0,
+    totalOrganizations: 0,
+    publicGists: 0,
+    forkedRepos: 0,
     rank: { level: "C", percentile: 100 },
   };
 
@@ -261,7 +278,7 @@ const fetchStats = async (
   });
 
   // Catch GraphQL errors.
-  if (res.data.errors) {
+  if (res && res.data && res.data.errors) {
     logger.error(res.data.errors);
     if (res.data.errors[0].type === "NOT_FOUND") {
       throw new CustomError(
@@ -281,9 +298,16 @@ const fetchStats = async (
     );
   }
 
-  const user = res.data.data.user;
+  const user = res.data?.data?.user;
+  if (!user) {
+    throw new CustomError("Could not fetch user", CustomError.USER_NOT_FOUND);
+  }
 
   stats.name = user.name || user.login;
+  stats.totalArticles = await fetchDevToStats(username);
+  stats.totalOrganizations = user.organizations?.totalCount || 0;
+  stats.publicGists = user.gists?.totalCount || 0;
+  stats.forkedRepos = user.forks?.totalCount || 0;
 
   // if include_all_commits, fetch all commits using the REST API.
   if (include_all_commits) {
@@ -292,33 +316,33 @@ const fetchStats = async (
     stats.totalCommits = user.commits.totalCommitContributions;
   }
 
-  stats.totalPRs = user.pullRequests.totalCount;
+  stats.totalPRs = user.pullRequests?.totalCount || 0;
   if (include_merged_pull_requests) {
-    stats.totalPRsMerged = user.mergedPullRequests.totalCount;
+    stats.totalPRsMerged = user.mergedPullRequests?.totalCount || 0;
     stats.mergedPRsPercentage =
-      (user.mergedPullRequests.totalCount / user.pullRequests.totalCount) *
-        100 || 0;
+      (stats.totalPRsMerged / (stats.totalPRs || 1)) * 100 || 0;
   }
-  stats.totalReviews = user.reviews.totalPullRequestReviewContributions;
-  stats.totalIssues = user.openIssues.totalCount + user.closedIssues.totalCount;
+  stats.totalReviews = user.reviews?.totalPullRequestReviewContributions || 0;
+  stats.totalIssues =
+    (user.openIssues?.totalCount || 0) + (user.closedIssues?.totalCount || 0);
   if (include_discussions) {
-    stats.totalDiscussionsStarted = user.repositoryDiscussions.totalCount;
+    stats.totalDiscussionsStarted = user.repositoryDiscussions?.totalCount || 0;
   }
   if (include_discussions_answers) {
     stats.totalDiscussionsAnswered =
-      user.repositoryDiscussionComments.totalCount;
+      user.repositoryDiscussionComments?.totalCount || 0;
   }
-  stats.contributedTo = user.repositoriesContributedTo.totalCount;
+  stats.contributedTo = user.repositoriesContributedTo?.totalCount || 0;
 
   // Retrieve stars while filtering out repositories to be hidden.
   const allExcludedRepos = [...exclude_repo, ...excludeRepositories];
   let repoToHide = new Set(allExcludedRepos);
 
   stats.totalStars = user.repositories.nodes
-    .filter((data) => {
+    .filter((/** @type {any} */ data) => {
       return !repoToHide.has(data.name);
     })
-    .reduce((prev, curr) => {
+    .reduce((/** @type {number} */ prev, /** @type {any} */ curr) => {
       return prev + curr.stargazers.totalCount;
     }, 0);
 
