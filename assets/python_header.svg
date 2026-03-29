@@ -6,67 +6,17 @@
       fill: #53F7AE; 
       font-weight: 600;
     }
-    
-    @keyframes type0 {
-      0% { clip-path: inset(0 100% 0 0); }
-      0.00% { clip-path: inset(0 100% 0 0); opacity: 1; }
-      12.50% { clip-path: inset(0 0 0 0); opacity: 1; }
-      100% { clip-path: inset(0 0 0 0); opacity: 1; }
-    }
-    .line0 { 
-      opacity: 0;
-      animation: type0 8s steps(40) forwards;
-    }
-  
-    @keyframes type1 {
-      0% { clip-path: inset(0 100% 0 0); }
-      15.00% { clip-path: inset(0 100% 0 0); opacity: 1; }
-      31.25% { clip-path: inset(0 0 0 0); opacity: 1; }
-      100% { clip-path: inset(0 0 0 0); opacity: 1; }
-    }
-    .line1 { 
-      opacity: 0;
-      animation: type1 8s steps(40) forwards;
-    }
-  
-    @keyframes type2 {
-      0% { clip-path: inset(0 100% 0 0); }
-      33.75% { clip-path: inset(0 100% 0 0); opacity: 1; }
-      50.00% { clip-path: inset(0 0 0 0); opacity: 1; }
-      100% { clip-path: inset(0 0 0 0); opacity: 1; }
-    }
-    .line2 { 
-      opacity: 0;
-      animation: type2 8s steps(40) forwards;
-    }
-  
-    @keyframes type3 {
-      0% { clip-path: inset(0 100% 0 0); }
-      52.50% { clip-path: inset(0 100% 0 0); opacity: 1; }
-      68.75% { clip-path: inset(0 0 0 0); opacity: 1; }
-      100% { clip-path: inset(0 0 0 0); opacity: 1; }
-    }
-    .line3 { 
-      opacity: 0;
-      animation: type3 8s steps(40) forwards;
-    }
-  
-    @keyframes type4 {
-      0% { clip-path: inset(0 100% 0 0); }
-      71.25% { clip-path: inset(0 100% 0 0); opacity: 1; }
-      87.50% { clip-path: inset(0 0 0 0); opacity: 1; }
-      100% { clip-path: inset(0 0 0 0); opacity: 1; }
-    }
-    .line4 { 
-      opacity: 0;
-      animation: type4 8s steps(40) forwards;
-    }
-  
   </style>
-  <text x="10" y="25" class="text line0">try:</text>
-<text x="50" y="53" class="text line1">understand_first()</text>
-<text x="50" y="81" class="text line2">then_build()</text>
-<text x="10" y="109" class="text line3">except shortcuts:</text>
-<text x="50" y="137" class="text line4">raise BetterQuestion</text>
 
+  <mask id="mask0"><rect x="10" y="0" width="0" height="30" fill="white"><animate attributeName="width" from="0" to="400" dur="1s" begin="0s" fill="freeze" /></rect></mask>
+  <mask id="mask1"><rect x="50" y="30" width="0" height="30" fill="white"><animate attributeName="width" from="0" to="400" dur="2s" begin="1s" fill="freeze" /></rect></mask>
+  <mask id="mask2"><rect x="50" y="60" width="0" height="30" fill="white"><animate attributeName="width" from="0" to="400" dur="2s" begin="3s" fill="freeze" /></rect></mask>
+  <mask id="mask3"><rect x="10" y="90" width="0" height="30" fill="white"><animate attributeName="width" from="0" to="400" dur="2s" begin="5s" fill="freeze" /></rect></mask>
+  <mask id="mask4"><rect x="50" y="120" width="0" height="30" fill="white"><animate attributeName="width" from="0" to="400" dur="2s" begin="7s" fill="freeze" /></rect></mask>
+
+  <text x="10" y="25" class="text" mask="url(#mask0)">try:</text>
+  <text x="50" y="53" class="text" mask="url(#mask1)">understand_first()</text>
+  <text x="50" y="81" class="text" mask="url(#mask2)">then_build()</text>
+  <text x="10" y="109" class="text" mask="url(#mask3)">except shortcuts:</text>
+  <text x="50" y="137" class="text" mask="url(#mask4)">raise BetterQuestion</text>
 </svg>
