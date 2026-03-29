@@ -5,7 +5,6 @@ import "@testing-library/jest-dom";
 import axios from "axios";
 import MockAdapter from "axios-mock-adapter";
 import topLangs from "../api/top-langs.js";
-import { renderTopLanguages } from "../src/cards/top-languages.js";
 import { renderError } from "../src/common/render.js";
 import { CACHE_TTL, DURATIONS } from "../src/common/cache.js";
 
@@ -70,19 +69,6 @@ const error = {
   ],
 };
 
-const langs = {
-  Python: {
-    color: "#3572A5",
-    name: "Python",
-    size: 250,
-  },
-  javascript: {
-    color: "#0ff",
-    name: "javascript",
-    size: 200,
-  },
-};
-
 const mock = new MockAdapter(axios);
 
 afterEach(() => {
@@ -105,7 +91,7 @@ describe("Test /api/top-langs", () => {
     await topLangs(req, res);
 
     expect(res.setHeader).toHaveBeenCalledWith("Content-Type", "image/svg+xml");
-    expect(res.send).toHaveBeenCalledWith(renderTopLanguages(langs));
+    expect(res.send.mock.calls[0][0]).toMatchSnapshot();
   });
 
   it("should work with the query options", async () => {
@@ -129,16 +115,7 @@ describe("Test /api/top-langs", () => {
     await topLangs(req, res);
 
     expect(res.setHeader).toHaveBeenCalledWith("Content-Type", "image/svg+xml");
-    expect(res.send).toHaveBeenCalledWith(
-      renderTopLanguages(langs, {
-        hide_title: true,
-        card_width: 100,
-        title_color: "fff",
-        icon_color: "fff",
-        text_color: "fff",
-        bg_color: "fff",
-      }),
-    );
+    expect(res.send.mock.calls[0][0]).toMatchSnapshot();
   });
 
   it("should render error card on user data fetch error", async () => {

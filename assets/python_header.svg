@@ -1,0 +1,72 @@
+<svg width="450" height="180" viewBox="0 0 450 180" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .text { 
+      font-family: 'Fira Code', 'Courier New', monospace; 
+      font-size: 22px; 
+      fill: #53F7AE; 
+      font-weight: 600;
+    }
+    
+    @keyframes type0 {
+      0% { clip-path: inset(0 100% 0 0); }
+      0.00% { clip-path: inset(0 100% 0 0); opacity: 1; }
+      12.50% { clip-path: inset(0 0 0 0); opacity: 1; }
+      100% { clip-path: inset(0 0 0 0); opacity: 1; }
+    }
+    .line0 { 
+      opacity: 0;
+      animation: type0 8s steps(40) forwards;
+    }
+  
+    @keyframes type1 {
+      0% { clip-path: inset(0 100% 0 0); }
+      15.00% { clip-path: inset(0 100% 0 0); opacity: 1; }
+      31.25% { clip-path: inset(0 0 0 0); opacity: 1; }
+      100% { clip-path: inset(0 0 0 0); opacity: 1; }
+    }
+    .line1 { 
+      opacity: 0;
+      animation: type1 8s steps(40) forwards;
+    }
+  
+    @keyframes type2 {
+      0% { clip-path: inset(0 100% 0 0); }
+      33.75% { clip-path: inset(0 100% 0 0); opacity: 1; }
+      50.00% { clip-path: inset(0 0 0 0); opacity: 1; }
+      100% { clip-path: inset(0 0 0 0); opacity: 1; }
+    }
+    .line2 { 
+      opacity: 0;
+      animation: type2 8s steps(40) forwards;
+    }
+  
+    @keyframes type3 {
+      0% { clip-path: inset(0 100% 0 0); }
+      52.50% { clip-path: inset(0 100% 0 0); opacity: 1; }
+      68.75% { clip-path: inset(0 0 0 0); opacity: 1; }
+      100% { clip-path: inset(0 0 0 0); opacity: 1; }
+    }
+    .line3 { 
+      opacity: 0;
+      animation: type3 8s steps(40) forwards;
+    }
+  
+    @keyframes type4 {
+      0% { clip-path: inset(0 100% 0 0); }
+      71.25% { clip-path: inset(0 100% 0 0); opacity: 1; }
+      87.50% { clip-path: inset(0 0 0 0); opacity: 1; }
+      100% { clip-path: inset(0 0 0 0); opacity: 1; }
+    }
+    .line4 { 
+      opacity: 0;
+      animation: type4 8s steps(40) forwards;
+    }
+  
+  </style>
+  <text x="10" y="25" class="text line0">try:</text>
+<text x="50" y="53" class="text line1">understand_first()</text>
+<text x="50" y="81" class="text line2">then_build()</text>
+<text x="10" y="109" class="text line3">except shortcuts:</text>
+<text x="50" y="137" class="text line4">raise BetterQuestion</text>
+
+</svg>

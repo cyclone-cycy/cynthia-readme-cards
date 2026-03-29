@@ -781,7 +781,7 @@ const getDefaultLanguagesCountByLayout = ({ layout, hide_progress }) => {
  */
 const renderTopLanguages = (topLangs, options = {}) => {
   const {
-    hide_title = false,
+    hide_title = true,
     hide_border = false,
     card_width,
     title_color,
@@ -891,6 +891,12 @@ const renderTopLanguages = (topLangs, options = {}) => {
 
   card.setHideBorder(hide_border);
   card.setHideTitle(hide_title);
+
+  card.setAccessibilityLabel({
+    title: hide_title ? "Languages" : card.title,
+    desc: langs.map((lang) => `${lang.name} ${lang.size}`).join(", "),
+  });
+
   card.setCSS(
     `
     @keyframes slideInAnimation {

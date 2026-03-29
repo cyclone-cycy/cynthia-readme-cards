@@ -24,7 +24,7 @@ const stats = {
 describe("Test renderStatsCard", () => {
   it("should render correct SVG", () => {
     const svg = renderStatsCard(stats);
-    expect(svg).toContain("Anurag Hazra's GitHub Stats");
+    expect(svg).not.toContain("Anurag Hazra's GitHub Stats");
     expect(svg).toContain("Total Commits (last year):");
     expect(svg).toContain("1k");
   });

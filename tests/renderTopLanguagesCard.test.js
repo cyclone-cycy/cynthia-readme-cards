@@ -354,7 +354,7 @@ describe("Test renderTopLanguages helper functions", () => {
 
 describe("Test renderTopLanguages", () => {
   it("should render correctly", () => {
-    document.body.innerHTML = renderTopLanguages(langs);
+    document.body.innerHTML = renderTopLanguages(langs, { hide_title: false });
 
     expect(queryByTestId(document.body, "header")).toHaveTextContent(
       "Most Used Languages",
@@ -383,6 +383,11 @@ describe("Test renderTopLanguages", () => {
     );
   });
 
+  it("should hide title by default", () => {
+    document.body.innerHTML = renderTopLanguages(langs);
+    expect(queryByTestId(document.body, "header")).not.toBeInTheDocument();
+  });
+
   it("should hide languages when hide is passed", () => {
     document.body.innerHTML = renderTopLanguages(langs, {
       hide: ["HTML"],
@@ -407,7 +412,7 @@ describe("Test renderTopLanguages", () => {
 
   it("should resize the height correctly depending on langs", () => {
     document.body.innerHTML = renderTopLanguages(langs, {});
-    expect(document.querySelector("svg")).toHaveAttribute("height", "205");
+    expect(document.querySelector("svg")).toHaveAttribute("height", "175");
 
     document.body.innerHTML = renderTopLanguages(
       {
@@ -420,7 +425,7 @@ describe("Test renderTopLanguages", () => {
       },
       {},
     );
-    expect(document.querySelector("svg")).toHaveAttribute("height", "245");
+    expect(document.querySelector("svg")).toHaveAttribute("height", "215");
   });
 
   it("should render with custom width set", () => {
@@ -448,7 +453,7 @@ describe("Test renderTopLanguages", () => {
   });
 
   it("should render default colors properly", () => {
-    document.body.innerHTML = renderTopLanguages(langs);
+    document.body.innerHTML = renderTopLanguages(langs, { hide_title: false });
 
     const styleTag = document.querySelector("style");
     const stylesObject = cssToObject(styleTag.textContent);
@@ -531,7 +536,10 @@ describe("Test renderTopLanguages", () => {
   });
 
   it("should render with layout compact", () => {
-    document.body.innerHTML = renderTopLanguages(langs, { layout: "compact" });
+    document.body.innerHTML = renderTopLanguages(langs, {
+      layout: "compact",
+      hide_title: false,
+    });
 
     expect(queryByTestId(document.body, "header")).toHaveTextContent(
       "Most Used Languages",
@@ -563,7 +571,10 @@ describe("Test renderTopLanguages", () => {
   });
 
   it("should render with layout donut", () => {
-    document.body.innerHTML = renderTopLanguages(langs, { layout: "donut" });
+    document.body.innerHTML = renderTopLanguages(langs, {
+      layout: "donut",
+      hide_title: false,
+    });
 
     expect(queryByTestId(document.body, "header")).toHaveTextContent(
       "Most Used Languages",
@@ -638,6 +649,7 @@ describe("Test renderTopLanguages", () => {
   it("should render with layout donut vertical", () => {
     document.body.innerHTML = renderTopLanguages(langs, {
       layout: "donut-vertical",
+      hide_title: false,
     });
 
     expect(queryByTestId(document.body, "header")).toHaveTextContent(
@@ -733,7 +745,10 @@ describe("Test renderTopLanguages", () => {
   });
 
   it("should render with layout pie", () => {
-    document.body.innerHTML = renderTopLanguages(langs, { layout: "pie" });
+    document.body.innerHTML = renderTopLanguages(langs, {
+      layout: "pie",
+      hide_title: false,
+    });
 
     expect(queryByTestId(document.body, "header")).toHaveTextContent(
       "Most Used Languages",
@@ -807,7 +822,10 @@ describe("Test renderTopLanguages", () => {
   });
 
   it("should render a translated title", () => {
-    document.body.innerHTML = renderTopLanguages(langs, { locale: "cn" });
+    document.body.innerHTML = renderTopLanguages(langs, {
+      locale: "cn",
+      hide_title: false,
+    });
     expect(document.getElementsByClassName("header")[0].textContent).toBe(
       "最常用的语言",
     );

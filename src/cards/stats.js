@@ -281,7 +281,7 @@ const renderStatsCard = (stats, options = {}) => {
   const {
     hide = [],
     show_icons = false,
-    hide_title = false,
+    hide_title = true,
     hide_border = false,
     card_width,
     hide_rank = false,
@@ -434,12 +434,14 @@ const renderStatsCard = (stats, options = {}) => {
     };
   }
 
-  STATS.orgs = {
-    icon: icons.contribs,
-    label: "Organizations",
-    value: totalOrganizations,
-    id: "orgs",
-  };
+  if (show.includes("orgs")) {
+    STATS.orgs = {
+      icon: icons.contribs,
+      label: "Organizations",
+      value: totalOrganizations,
+      id: "orgs",
+    };
+  }
 
   STATS.contribs = {
     icon: icons.contribs,
@@ -621,7 +623,9 @@ const renderStatsCard = (stats, options = {}) => {
     .join(", ");
 
   card.setAccessibilityLabel({
-    title: `${card.title}, Rank: ${rank.level}`,
+    title: hide_title
+      ? `Rank: ${rank.level}`
+      : `${card.title}, Rank: ${rank.level}`,
     desc: labels,
   });
 
