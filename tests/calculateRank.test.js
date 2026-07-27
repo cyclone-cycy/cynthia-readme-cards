@@ -19,18 +19,21 @@ describe("Test calculateRank", () => {
   });
 
   it("beginner user gets B- rank", () => {
-    expect(
-      calculateRank({
-        all_commits: false,
-        commits: 125,
-        prs: 25,
-        issues: 10,
-        reviews: 5,
-        repos: 0,
-        stars: 25,
-        followers: 5,
-      }),
-    ).toStrictEqual({ level: "B-", percentile: 65.02918514848255 });
+    const result = calculateRank({
+      all_commits: false,
+      commits: 125,
+      prs: 25,
+      issues: 10,
+      reviews: 5,
+      repos: 0,
+      stars: 25,
+      followers: 5,
+    });
+    expect(result.level).toBe("B-");
+    // toBeCloseTo, not toStrictEqual: this value differs by ~2e-14 across
+    // Node/V8 versions due to floating-point rounding in the underlying
+    // erf() computation, not a real behavioral difference.
+    expect(result.percentile).toBeCloseTo(65.02918514848255, 10);
   });
 
   it("median user gets B+ rank", () => {

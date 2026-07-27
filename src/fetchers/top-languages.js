@@ -80,6 +80,96 @@ const fetcher = (variables, token) => {
 };
 
 /**
+ * Fallback fetcher used when the combined query above is rejected outright
+ * (e.g. a specific org's token policy blocks the whole request). Splits the
+ * ask into independent per-source queries so one blocked org can't take
+ * down every other org/personal repo's language data.
+ *
+ * @param {string} username GitHub username.
+ * @param {string} token GitHub token.
+ * @returns {Promise<{repoNodes: any[], prNodes: any[]}>} Merged repo/PR nodes from every source that succeeded.
+ */
+const fetchPerSourceFallback = async (username, token) => {
+  const headers = { Authorization: `token ${token}` };
+  const languageFields = `
+    isFork
+    languages(first: 10, orderBy: {field: SIZE, direction: DESC}) {
+      edges { size node { color name } }
+    }
+  `;
+
+  /**
+   * @param {string} query GraphQL query string.
+   * @param {any} variables Query variables.
+   * @returns {Promise<any>} The response's data field.
+   */
+  const run = (query, variables) =>
+    request({ query, variables }, headers).then((res) => {
+      if (res.data.errors) {
+        throw new Error(res.data.errors[0]?.message || "GraphQL error");
+      }
+      return res.data.data;
+    });
+
+  // Personal repos + PRs: not gated by any org policy, should always succeed.
+  const personal = await run(
+    `query userInfo($login: String!) {
+      user(login: $login) {
+        repositories(ownerAffiliations: [OWNER, COLLABORATOR], first: 100) {
+          nodes { name ${languageFields} }
+        }
+        pullRequests(first: 100) {
+          nodes { repository { name ${languageFields} } }
+        }
+        organizations(first: 100) { nodes { login } }
+      }
+    }`,
+    { login: username },
+  );
+
+  let repoNodes = personal?.user?.repositories?.nodes || [];
+  const prNodes = (personal?.user?.pullRequests?.nodes || [])
+    .map((/** @type {any} */ node) => node.repository)
+    .filter((/** @type {any} */ repo) => repo && repo.name);
+  const orgLogins = (personal?.user?.organizations?.nodes || []).map(
+    (/** @type {any} */ node) => node.login,
+  );
+
+  // Query each org independently. If one org's policy blocks this token
+  // (e.g. hngprojects rejecting the token type), only that org's repos are
+  // skipped — every other org and personal repos still come through.
+  const orgResults = await Promise.allSettled(
+    orgLogins.map((/** @type {string} */ org) =>
+      run(
+        `query orgRepos($login: String!) {
+          organization(login: $login) {
+            repositories(first: 100) {
+              nodes { name ${languageFields} }
+            }
+          }
+        }`,
+        { login: org },
+      ).then((data) => ({
+        org,
+        nodes: data?.organization?.repositories?.nodes || [],
+      })),
+    ),
+  );
+
+  orgResults.forEach((result, i) => {
+    if (result.status === "fulfilled") {
+      repoNodes = repoNodes.concat(result.value.nodes);
+    } else {
+      logger.error(
+        `Skipping org "${orgLogins[i]}" in language stats: ${result.reason?.message || result.reason}`,
+      );
+    }
+  });
+
+  return { repoNodes, prNodes };
+};
+
+/**
  * @typedef {import("./types").TopLangData} TopLangData Top languages data.
  */
 
@@ -104,30 +194,54 @@ const fetchTopLanguages = async (
 
   const res = await retryer(fetcher, { login: username });
 
+  let repoNodes;
+  let prNodes;
+
   if (res.data.errors) {
     logger.error(res.data.errors);
+
+    // A missing user is a real error — no fallback can fix that.
     if (res.data.errors[0].type === "NOT_FOUND") {
       throw new CustomError(
         res.data.errors[0].message || "Could not fetch user.",
         CustomError.USER_NOT_FOUND,
       );
     }
-    if (res.data.errors[0].message) {
+
+    // Otherwise, this is very likely a single org's token policy rejecting
+    // the whole combined query (e.g. an org blocking this token type).
+    // Fall back to querying personal repos + each org separately, so that
+    // one blocked org doesn't take down every other org/personal repo's
+    // language data.
+    logger.log(
+      "Combined language query failed, falling back to per-source queries.",
+    );
+    try {
+      const fallback = await fetchPerSourceFallback(
+        username,
+        // @ts-ignore
+        process.env.PAT_1,
+      );
+      repoNodes = fallback.repoNodes;
+      prNodes = fallback.prNodes;
+    } catch (fallbackErr) {
+      logger.error(fallbackErr);
       throw new CustomError(
-        wrapTextMultiline(res.data.errors[0].message, 90, 1)[0],
-        res.statusText,
+        wrapTextMultiline(
+          res.data.errors[0].message ||
+            "Something went wrong while trying to retrieve the language data using the GraphQL API.",
+          90,
+          1,
+        )[0],
+        res.statusText || CustomError.GRAPHQL_ERROR,
       );
     }
-    throw new CustomError(
-      "Something went wrong while trying to retrieve the language data using the GraphQL API.",
-      CustomError.GRAPHQL_ERROR,
-    );
+  } else {
+    repoNodes = res.data.data.user.repositories.nodes;
+    prNodes = (res.data.data.user.pullRequests?.nodes || [])
+      .map((/** @type {any} */ node) => node.repository)
+      .filter((/** @type {any} */ repo) => repo && repo.name);
   }
-
-  let repoNodes = res.data.data.user.repositories.nodes;
-  const prNodes = (res.data.data.user.pullRequests?.nodes || [])
-    .map((node) => node.repository)
-    .filter((repo) => repo && repo.name);
 
   // Identify all repositories where user has opened PRs
   const prRepoNames = new Set(prNodes.map((n) => n.name));
