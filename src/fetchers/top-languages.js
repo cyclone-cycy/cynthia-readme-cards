@@ -111,29 +111,69 @@ const fetchPerSourceFallback = async (username, token) => {
       return res.data.data;
     });
 
-  // Personal repos + PRs: not gated by any org policy, should always succeed.
-  const personal = await run(
-    `query userInfo($login: String!) {
-      user(login: $login) {
-        repositories(ownerAffiliations: [OWNER, COLLABORATOR], first: 100) {
-          nodes { name ${languageFields} }
+  // Personal repos + org list. COLLABORATOR affiliation is included because
+  // it's normally safe, but if the user was ever added as a direct
+  // collaborator (not just an org member) on a repo in a blocked org, even
+  // this could fail — so fall back further to OWNER-only if it does.
+  let personal;
+  try {
+    personal = await run(
+      `query userInfo($login: String!) {
+        user(login: $login) {
+          repositories(ownerAffiliations: [OWNER, COLLABORATOR], first: 100) {
+            nodes { name ${languageFields} }
+          }
+          organizations(first: 100) { nodes { login } }
         }
-        pullRequests(first: 100) {
-          nodes { repository { name ${languageFields} } }
+      }`,
+      { login: username },
+    );
+  } catch (personalErr) {
+    logger.error(
+      `Personal+collaborator repo query failed, falling back to owned repos only: ${/** @type {any} */ (personalErr)?.message || personalErr}`,
+    );
+    personal = await run(
+      `query userInfo($login: String!) {
+        user(login: $login) {
+          repositories(ownerAffiliations: [OWNER], first: 100) {
+            nodes { name ${languageFields} }
+          }
+          organizations(first: 100) { nodes { login } }
         }
-        organizations(first: 100) { nodes { login } }
-      }
-    }`,
-    { login: username },
-  );
+      }`,
+      { login: username },
+    );
+  }
 
   let repoNodes = personal?.user?.repositories?.nodes || [];
-  const prNodes = (personal?.user?.pullRequests?.nodes || [])
-    .map((/** @type {any} */ node) => node.repository)
-    .filter((/** @type {any} */ repo) => repo && repo.name);
   const orgLogins = (personal?.user?.organizations?.nodes || []).map(
     (/** @type {any} */ node) => node.login,
   );
+
+  // PRs are fetched separately and independently: unlike the query above,
+  // this can touch any repo the user has ever opened a PR against —
+  // including private repos in a blocked org (e.g. hngprojects). If that
+  // happens, skip PR-based repos entirely rather than failing everything.
+  let prNodes = [];
+  try {
+    const prData = await run(
+      `query userPRs($login: String!) {
+        user(login: $login) {
+          pullRequests(first: 100) {
+            nodes { repository { name ${languageFields} } }
+          }
+        }
+      }`,
+      { login: username },
+    );
+    prNodes = (prData?.user?.pullRequests?.nodes || [])
+      .map((/** @type {any} */ node) => node.repository)
+      .filter((/** @type {any} */ repo) => repo && repo.name);
+  } catch (prErr) {
+    logger.error(
+      `Skipping PR-based repos in language stats: ${/** @type {any} */ (prErr)?.message || prErr}`,
+    );
+  }
 
   // Query each org independently. If one org's policy blocks this token
   // (e.g. hngprojects rejecting the token type), only that org's repos are
