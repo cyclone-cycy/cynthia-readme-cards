@@ -64,13 +64,13 @@ function generateErrorCard(title, _message, theme = "blue-green") {
         .error-message { font: 400 14px 'Segoe UI', Ubuntu, Sans-Serif; fill: ${color.text}; }
         .error-bg { fill: ${color.bg}; stroke: ${color.border}; stroke-width: 1; }
       </style>
-      
+
       <rect class="error-bg" x="0.5" y="0.5" rx="4.5" height="149" width="466"/>
-      
+
       <g transform="translate(25, 25)">
         <path fill="${color.accent}" d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm9 3a1 1 0 11-2 0 1 1 0 012 0zm-.25-6.25a.75.75 0 00-1.5 0v3.5a.75.75 0 001.5 0v-3.5z"/>
       </g>
-      
+
       <text x="55" y="40" class="error-title">${errorType.title}</text>
       <text x="55" y="70" class="error-message">${errorType.lines[0]}</text>
       <text x="55" y="95" class="error-message">${errorType.lines[1]}</text>
@@ -156,6 +156,14 @@ export default async function handler(req, res) {
         });
 
         const data = await graphqlResponse.json();
+
+        if (data.errors || !data.data?.user) {
+          throw new Error(
+            data.errors
+              ? `GraphQL error: ${data.errors.map((e) => e.message).join("; ")}`
+              : "GraphQL returned no user data (check GITHUB_STATS_TOKEN validity/scopes).",
+          );
+        }
 
         const [
           issuesResp,
@@ -351,7 +359,8 @@ export default async function handler(req, res) {
     return res.status(200).send(svg);
   } catch (error) {
     logger.error("Error generating GitHub stats:", error);
-    const fallbackUrl = `https://github-readme-stats.vercel.app/api?username=${username}&theme=dark`;
-    return res.redirect(302, fallbackUrl);
+    const errorSvg = generateErrorCard("api_error", error.message);
+    res.setHeader("Content-Type", "image/svg+xml");
+    return res.status(500).send(errorSvg);
   }
 }
