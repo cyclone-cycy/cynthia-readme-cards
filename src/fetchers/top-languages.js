@@ -16,7 +16,7 @@
 
 import { retryer } from "../common/retryer.js";
 import { logger } from "../common/log.js";
-import { excludeRepositories } from "../common/envs.js";
+import { excludeRepositories, excludeOrgs } from "../common/envs.js";
 import { CustomError, MissingParamError } from "../common/error.js";
 import { wrapTextMultiline } from "../common/fmt.js";
 import { request } from "../common/http.js";
@@ -39,6 +39,9 @@ const fetcher = (variables, token) => {
             nodes {
               name
               isFork
+              owner {
+                login
+              }
               languages(first: 10, orderBy: {field: SIZE, direction: DESC}) {
                 edges {
                   size
@@ -56,6 +59,9 @@ const fetcher = (variables, token) => {
               repository {
                 name
                 isFork
+                owner {
+                  login
+                }
                 languages(first: 10, orderBy: {field: SIZE, direction: DESC}) {
                   edges {
                     size
@@ -146,9 +152,15 @@ const fetchPerSourceFallback = async (username, token) => {
   }
 
   let repoNodes = personal?.user?.repositories?.nodes || [];
-  const orgLogins = (personal?.user?.organizations?.nodes || []).map(
-    (/** @type {any} */ node) => node.login,
-  );
+  const orgLogins = (personal?.user?.organizations?.nodes || [])
+    .map((/** @type {any} */ node) => node.login)
+    .filter(
+      (/** @type {string} */ login) =>
+        !excludeOrgs.some(
+          (/** @type {string} */ excluded) =>
+            excluded.toLowerCase() === login.toLowerCase(),
+        ),
+    );
 
   // PRs are fetched separately and independently: unlike the query above,
   // this can touch any repo the user has ever opened a PR against —
@@ -281,6 +293,19 @@ const fetchTopLanguages = async (
     prNodes = (res.data.data.user.pullRequests?.nodes || [])
       .map((/** @type {any} */ node) => node.repository)
       .filter((/** @type {any} */ repo) => repo && repo.name);
+  }
+
+  // Drop repos owned by orgs the user wants excluded from language stats
+  // (e.g. program orgs they were added to but never actually contribute in).
+  if (excludeOrgs.length) {
+    const isExcludedOwner = (/** @type {any} */ node) =>
+      node?.owner?.login &&
+      excludeOrgs.some(
+        (/** @type {string} */ org) =>
+          org.toLowerCase() === node.owner.login.toLowerCase(),
+      );
+    repoNodes = repoNodes.filter((node) => !isExcludedOwner(node));
+    prNodes = prNodes.filter((node) => !isExcludedOwner(node));
   }
 
   // Identify all repositories where user has opened PRs
