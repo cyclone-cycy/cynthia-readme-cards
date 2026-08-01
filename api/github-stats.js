@@ -157,6 +157,14 @@ export default async function handler(req, res) {
 
         const data = await graphqlResponse.json();
 
+        if (data.errors || !data.data?.user) {
+          throw new Error(
+            data.errors
+              ? `GraphQL error: ${data.errors.map((e) => e.message).join("; ")}`
+              : "GraphQL returned no user data (check GITHUB_STATS_TOKEN validity/scopes).",
+          );
+        }
+
         const [
           issuesResp,
           reviewsResp,
