@@ -9,25 +9,73 @@
 
 import { renderStatsCard } from "../src/cards/stats.js";
 import { logger } from "../src/common/log.js";
-import { FALLBACK_STATS_SVG } from "../src/common/fallbackStats.js";
 
 /**
- * Serves the static fallback stats card so visitors never see a visibly
- * broken/error card. The SVG carries an HTML comment marker (invisible when
- * rendered) and this response also sets X-Stats-Source: fallback, so the
- * degraded state is only detectable by view-source or checking response
- * headers — never by looking at the rendered card.
+ * Generates an error card SVG with witty messages.
  *
- * @param {any} res Express response.
- * @param {string} reason Internal reason for logging only.
- * @returns {void}
+ * @param {string} title The error category.
+ * @param {string} _message The detailed error message.
+ * @param {string} theme The theme to use.
+ * @returns {string} SVG markup for the error card.
  */
-function serveFallbackStats(res, reason) {
-  logger.error(`Serving fallback stats card: ${reason}`);
-  res.setHeader("Content-Type", "image/svg+xml");
-  res.setHeader("Cache-Control", "public, max-age=300");
-  res.setHeader("X-Stats-Source", "fallback");
-  res.status(200).send(FALLBACK_STATS_SVG);
+function generateErrorCard(title, _message, theme = "blue-green") {
+  const wittyMessages = {
+    missing_token: {
+      title: "Oops! Token went on vacation 🏖️",
+      lines: [
+        "Looks like GITHUB_STATS_TOKEN decided to ghost us.",
+        "It's probably just hiding behind the couch...",
+      ],
+    },
+    api_error: {
+      title: "GitHub is having a moment 🤷‍♀️",
+      lines: [
+        "The API seems to be playing hard to get today.",
+        "Even developers need coffee breaks ☕",
+      ],
+    },
+  };
+
+  const colors = {
+    "blue-green": {
+      bg: "#0d1117",
+      border: "#f85149",
+      text: "#e6edf3",
+      accent: "#f85149",
+    },
+    dark: {
+      bg: "#151515",
+      border: "#f85149",
+      text: "#e6edf3",
+      accent: "#f85149",
+    },
+  };
+
+  const color = colors[theme] || colors["blue-green"];
+  const errorType =
+    title === "missing_token"
+      ? wittyMessages.missing_token
+      : wittyMessages.api_error;
+
+  return `
+    <svg width="467" height="150" viewBox="0 0 467 150" xmlns="http://www.w3.org/2000/svg">
+      <style>
+        .error-title { font: 600 18px 'Segoe UI', Ubuntu, Sans-Serif; fill: ${color.accent}; }
+        .error-message { font: 400 14px 'Segoe UI', Ubuntu, Sans-Serif; fill: ${color.text}; }
+        .error-bg { fill: ${color.bg}; stroke: ${color.border}; stroke-width: 1; }
+      </style>
+
+      <rect class="error-bg" x="0.5" y="0.5" rx="4.5" height="149" width="466"/>
+
+      <g transform="translate(25, 25)">
+        <path fill="${color.accent}" d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8zm9 3a1 1 0 11-2 0 1 1 0 012 0zm-.25-6.25a.75.75 0 00-1.5 0v3.5a.75.75 0 001.5 0v-3.5z"/>
+      </g>
+
+      <text x="55" y="40" class="error-title">${errorType.title}</text>
+      <text x="55" y="70" class="error-message">${errorType.lines[0]}</text>
+      <text x="55" y="95" class="error-message">${errorType.lines[1]}</text>
+    </svg>
+  `;
 }
 
 /**
@@ -231,10 +279,18 @@ export default async function handler(req, res) {
           };
         }
       } catch (error) {
-        return serveFallbackStats(res, `GitHub API error: ${error.message}`);
+        logger.error("GitHub API Error:", error);
+        const errorSvg = generateErrorCard("api_error", error.message);
+        res.setHeader("Content-Type", "image/svg+xml");
+        return res.status(500).send(errorSvg);
       }
     } else {
-      return serveFallbackStats(res, "GITHUB_STATS_TOKEN is not set");
+      const errorSvg = generateErrorCard(
+        "missing_token",
+        "GITHUB_STATS_TOKEN is not set",
+      );
+      res.setHeader("Content-Type", "image/svg+xml");
+      return res.status(400).send(errorSvg);
     }
 
     let articleCount = 0;
@@ -302,6 +358,9 @@ export default async function handler(req, res) {
     res.setHeader("Cache-Control", "public, max-age=1800");
     return res.status(200).send(svg);
   } catch (error) {
-    return serveFallbackStats(res, `Unexpected error: ${error.message}`);
+    logger.error("Error generating GitHub stats:", error);
+    const errorSvg = generateErrorCard("api_error", error.message);
+    res.setHeader("Content-Type", "image/svg+xml");
+    return res.status(500).send(errorSvg);
   }
 }
