@@ -141,8 +141,23 @@ function getReadTime(minutes) {
  */
 export default async function handler(req, res) {
   const username = req.query.username || process.env.DEVTO_USERNAME;
-  const index = parseInt(req.query.index || "1", 10) - 1; // convert 1-based → 0-based
   const isPinned = req.query.pinned === "true";
+
+  // Resolve article index: query param → Vercel env var → default 1
+  // Update CARD1_ARTICLE_INDEX, CARD3_ARTICLE_INDEX, PINNED_ARTICLE_INDEX
+  // in your Vercel dashboard when article positions shift.
+  let resolvedIndex;
+  if (req.query.index) {
+    resolvedIndex = req.query.index;
+  } else if (isPinned) {
+    resolvedIndex = process.env.PINNED_ARTICLE_INDEX || "1";
+  } else if (req.query.card === "3") {
+    resolvedIndex = process.env.CARD3_ARTICLE_INDEX || "3";
+  } else {
+    resolvedIndex = process.env.CARD1_ARTICLE_INDEX || "1";
+  }
+  const index = parseInt(resolvedIndex, 10) - 1; // convert 1-based → 0-based
+
   const cardW = parseInt(req.query.width || "270", 10);
   const cardH = parseInt(req.query.height || "220", 10);
   const showReactions = req.query.reactions !== "false";

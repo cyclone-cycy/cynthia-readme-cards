@@ -3,42 +3,29 @@
  * @description Data fetcher for public Dev.to user statistics.
  */
 
-import https from "https";
+import axios from "axios";
 
-const fetchDevToStats = (username) => {
-  const devtoUser = process.env.DEVTO_USERNAME || username || "cynthizo";
-  return new Promise((resolve) => {
-    const options = {
-      hostname: "dev.to",
-      path: `/api/articles?username=${devtoUser}&per_page=1000`,
-      method: "GET",
-      headers: {
-        "User-Agent": "Mozilla/5.0",
-        ...(process.env.DEVTO_API_KEY
-          ? { "api-key": process.env.DEVTO_API_KEY }
-          : {}),
+const fetchDevToStats = async (username) => {
+  const devtoUser = username || process.env.DEVTO_USERNAME;
+  if (!devtoUser) {
+    return 0;
+  }
+  try {
+    const response = await axios.get(
+      `https://dev.to/api/articles?username=${devtoUser}`,
+      {
+        headers: {
+          "User-Agent": "Mozilla/5.0",
+          ...(process.env.DEVTO_API_KEY
+            ? { "api-key": process.env.DEVTO_API_KEY }
+            : {}),
+        },
       },
-    };
-
-    https
-      .get(options, (res) => {
-        let data = "";
-        res.on("data", (chunk) => {
-          data += chunk;
-        });
-        res.on("end", () => {
-          try {
-            const json = JSON.parse(data);
-            resolve(Array.isArray(json) ? json.length : 0);
-          } catch {
-            resolve(0);
-          }
-        });
-      })
-      .on("error", () => {
-        resolve(0);
-      });
-  });
+    );
+    return Array.isArray(response.data) ? response.data.length : 0;
+  } catch {
+    return 0;
+  }
 };
 
 export { fetchDevToStats };
