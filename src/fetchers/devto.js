@@ -6,7 +6,10 @@
 import axios from "axios";
 
 const fetchDevToStats = async (username) => {
-  const devtoUser = username || process.env.DEVTO_USERNAME || "cynthizo";
+  const devtoUser = username || process.env.DEVTO_USERNAME;
+  if (!devtoUser) {
+    return 0;
+  }
   try {
     const response = await axios.get(
       `https://dev.to/api/articles?username=${devtoUser}`,
