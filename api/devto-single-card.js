@@ -206,16 +206,9 @@ export default async function handler(req, res) {
         `<image x="6" y="6" width="${cardW - 12}" height="${imageHeight}" href="${coverDataUri}" preserveAspectRatio="xMidYMid meet" clip-path="url(#coverClip)"/>`,
       );
 
-      // Centered Pinned Badge Overlay on Banner
-      if (isPinned) {
-        parts.push(
-          `<text x="${cardW / 2}" y="104" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#53F7AE" text-anchor="middle">📌 PINNED</text>`,
-        );
-      }
-
       // Title (Positioned immediately below 112px cover banner)
-      const titleStartY = isPinned ? 132 : 128;
-      const titleColor = isPinned ? "#ffffff" : "#53F7AE";
+      const titleStartY = 128;
+      const titleColor = "#53F7AE";
       const titleLines = wrapText(article.title, usableWidth, 3); // 3 lines max when cover image present
       titleLines.forEach((line, i) => {
         parts.push(
@@ -224,14 +217,8 @@ export default async function handler(req, res) {
       });
     } else {
       // 2. No Cover Image Layout (Clean, balanced typography card)
-      if (isPinned) {
-        parts.push(
-          `<text x="${cardW / 2}" y="28" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#53F7AE" text-anchor="middle">📌 PINNED</text>`,
-        );
-      }
-
-      const titleStartY = isPinned ? 62 : 36;
-      const titleColor = isPinned ? "#ffffff" : "#53F7AE";
+      const titleStartY = 36;
+      const titleColor = "#53F7AE";
       const titleLines = wrapText(article.title, usableWidth, 4); // 4 lines allowed when no cover image
       titleLines.forEach((line, i) => {
         parts.push(
