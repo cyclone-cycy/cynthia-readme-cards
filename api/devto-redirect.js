@@ -49,7 +49,7 @@ export default async function handler(req, res) {
 
   try {
     const response = await fetch(
-      `https://dev.to/api/articles?username=${username}&per_page=10`,
+      `https://dev.to/api/articles?username=${username}&per_page=1000`,
     );
     if (!response.ok) {
       throw new Error(`Dev.to API ${response.status}`);
