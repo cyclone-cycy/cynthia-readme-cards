@@ -209,10 +209,7 @@ export default async function handler(req, res) {
       // Centered Pinned Badge Overlay on Banner
       if (isPinned) {
         parts.push(
-          `<rect x="${cardW / 2 - 42}" y="98" width="84" height="20" rx="10" fill="#1a1a1a" stroke="#53F7AE" stroke-width="1"/>`,
-        );
-        parts.push(
-          `<text x="${cardW / 2}" y="112" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#53F7AE" text-anchor="middle">📌 PINNED</text>`,
+          `<text x="${cardW / 2}" y="104" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#53F7AE" text-anchor="middle">📌 PINNED</text>`,
         );
       }
 
@@ -229,10 +226,7 @@ export default async function handler(req, res) {
       // 2. No Cover Image Layout (Clean, balanced typography card)
       if (isPinned) {
         parts.push(
-          `<rect x="${cardW / 2 - 42}" y="16" width="84" height="24" rx="12" fill="#53F7AE"/>`,
-        );
-        parts.push(
-          `<text x="${cardW / 2}" y="32" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#0d1117" text-anchor="middle">📌 PINNED</text>`,
+          `<text x="${cardW / 2}" y="28" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#53F7AE" text-anchor="middle">📌 PINNED</text>`,
         );
       }
 
