@@ -65,22 +65,20 @@ function cleanText(str) {
 }
 
 /**
- * Wrap text into multiple lines for SVG rendering.
+ * Wrap text into multiple lines for SVG rendering (max 3 lines with truncation).
  *
  * @param {string} text The text to wrap.
- * @param {number} cardWidth Container width in px.
- * @returns {string[]} Array of line strings.
+ * @param {number} usableWidth Width in px available for text.
+ * @returns {string[]} Array of line strings (max 3 lines).
  */
-function wrapText(text, cardWidth = 260) {
+function wrapText(text, usableWidth = 246) {
   if (!text) {
     return [""];
   }
   const words = text.split(" ");
-  const lines = [];
+  let lines = [];
   let currentLine = "";
-  const margin = Math.max(10, Math.floor(cardWidth * 0.06));
-  const usableWidth = cardWidth - margin * 2;
-  const charWidth = cardWidth > 300 ? 6.0 : cardWidth > 200 ? 5.5 : 5.0;
+  const charWidth = 5.5;
   const maxChars = Math.floor(usableWidth / charWidth);
 
   for (const word of words) {
@@ -97,6 +95,18 @@ function wrapText(text, cardWidth = 260) {
   if (currentLine) {
     lines.push(currentLine);
   }
+
+  // Truncate to maximum 3 lines to prevent vertical overlap
+  if (lines.length > 3) {
+    lines = lines.slice(0, 3);
+    const lastIdx = lines.length - 1;
+    if (lines[lastIdx].length > maxChars - 3) {
+      lines[lastIdx] = lines[lastIdx].substring(0, maxChars - 3) + "...";
+    } else {
+      lines[lastIdx] += "...";
+    }
+  }
+
   return lines;
 }
 
@@ -144,8 +154,6 @@ export default async function handler(req, res) {
   const isPinned = req.query.pinned === "true";
 
   // Resolve article index: query param → Vercel env var → default 1
-  // Update CARD1_ARTICLE_INDEX, CARD3_ARTICLE_INDEX, PINNED_ARTICLE_INDEX
-  // in your Vercel dashboard when article positions shift.
   let resolvedIndex;
   if (req.query.index) {
     resolvedIndex = req.query.index;
@@ -194,7 +202,8 @@ export default async function handler(req, res) {
       : null;
 
     // --- Build single-card SVG ---
-    const inner = 5; // inner padding from left edge
+    const inner = 12; // 12px padding from left edge for clean breathing room
+    const usableWidth = cardW - inner * 2;
     const hasCover = !!coverDataUri;
     let parts = [];
 
@@ -203,44 +212,49 @@ export default async function handler(req, res) {
       `<rect x="0" y="0" width="${cardW}" height="${cardH}" rx="8" fill="#1a1a1a" stroke="#53F7AE" stroke-width="1"/>`,
     );
 
-    // Cover image
+    // Defs for rounded top corners on cover image
+    parts.push(
+      `<defs><clipPath id="coverClip"><rect x="6" y="6" width="${cardW - 12}" height="80" rx="6"/></clipPath></defs>`,
+    );
+
+    // Cover image (Full width header, edge-to-edge slice)
     if (hasCover) {
       parts.push(
-        `<image x="${inner}" y="5" width="${cardW - 10}" height="70" href="${coverDataUri}" preserveAspectRatio="xMidYMid meet"/>`,
+        `<image x="6" y="6" width="${cardW - 12}" height="80" href="${coverDataUri}" preserveAspectRatio="xMidYMid slice" clip-path="url(#coverClip)"/>`,
       );
     }
 
-    // Pinned badge
+    // Centered Pinned Badge
     if (isPinned) {
       if (hasCover) {
         parts.push(
-          `<text x="${cardW / 2}" y="90" font-family="Arial, sans-serif" font-size="10" fill="#53F7AE" text-anchor="middle">📌 PINNED</text>`,
+          `<rect x="${cardW / 2 - 42}" y="70" width="84" height="20" rx="10" fill="#1a1a1a" stroke="#53F7AE" stroke-width="1"/>`,
+        );
+        parts.push(
+          `<text x="${cardW / 2}" y="84" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#53F7AE" text-anchor="middle">📌 PINNED</text>`,
         );
       } else {
         parts.push(
-          `<rect x="${cardW / 2 - 18}" y="10" width="36" height="35" rx="6" fill="#53F7AE"/>`,
+          `<rect x="${cardW / 2 - 42}" y="12" width="84" height="26" rx="13" fill="#53F7AE"/>`,
         );
         parts.push(
-          `<text x="${cardW / 2}" y="33" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#0d1117" text-anchor="middle">📌</text>`,
-        );
-        parts.push(
-          `<text x="${cardW / 2}" y="47" font-family="Arial, sans-serif" font-size="8" fill="#53F7AE" text-anchor="middle">PINNED</text>`,
+          `<text x="${cardW / 2}" y="29" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#0d1117" text-anchor="middle">📌 PINNED</text>`,
         );
       }
     }
 
-    // Title
-    const titleStartY = hasCover ? 120 : isPinned ? 73 : 25;
+    // Title (Positioned immediately below cover/pinned with zero dead space)
+    const titleStartY = hasCover ? 104 : isPinned ? 52 : 25;
     const titleColor = isPinned ? "#ffffff" : "#53F7AE";
-    const titleLines = wrapText(article.title, cardW - 10);
+    const titleLines = wrapText(article.title, usableWidth);
     titleLines.forEach((line, i) => {
       parts.push(
-        `<text x="${inner}" y="${titleStartY + i * 15}" fill="${titleColor}" font-family="Arial, sans-serif" font-size="12" font-weight="bold">${cleanText(line)}</text>`,
+        `<text x="${inner}" y="${titleStartY + i * 16}" fill="${titleColor}" font-family="Arial, sans-serif" font-size="12" font-weight="bold">${cleanText(line)}</text>`,
       );
     });
 
     // Tags
-    const tagY = hasCover ? 185 : 185;
+    const tagY = hasCover ? 170 : 170;
     parts.push(
       renderTags(
         article.tag_list,
@@ -259,14 +273,14 @@ export default async function handler(req, res) {
       metaParts.push(`❤️ ${reactions}`);
     }
     parts.push(
-      `<text x="${inner}" y="${cardH - 10}" fill="#8b949e" font-family="Arial, sans-serif" font-size="10">${metaParts.join("  ·  ")}</text>`,
+      `<text x="${inner}" y="${cardH - 12}" fill="#8b949e" font-family="Arial, sans-serif" font-size="10">${metaParts.join("  ·  ")}</text>`,
     );
 
     const svg = `<svg width="${cardW}" height="${cardH}" xmlns="http://www.w3.org/2000/svg">
       ${parts.join("\n      ")}
     </svg>`;
 
-    // Return the article URL in a custom header so the README generator could read it
+    // Return SVG response
     res.setHeader("Content-Type", "image/svg+xml");
     res.setHeader("Cache-Control", "public, max-age=1800");
     res.setHeader("X-Article-Url", article.url || `https://dev.to/${username}`);
