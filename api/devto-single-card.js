@@ -1,25 +1,7 @@
 /**
  * @module DevToSingleCardAPI
- * @description Renders a SINGLE Dev.to article card as an SVG.
- *
- * This endpoint exists so that each card can be wrapped in its own <a> tag
- * in the GitHub README, making individual articles clickable.
- *
- * QUERY PARAMS:
- *   ?username=cynthizo   – Dev.to username (falls back to DEVTO_USERNAME env)
- *   ?index=1             – 1-based article index (1 = most recent, default 1)
- *   ?pinned=true         – Show the 📌 PINNED badge on this card
- *   ?width=270           – Card width in px (default 270)
- *   ?height=220          – Card height in px (default 220)
- *   ?reactions=true       – Show reaction count (default true)
- *
- * ENVIRONMENT VARIABLES:
- *   DEVTO_USERNAME       – Fallback Dev.to username
+ * @description Renders a SINGLE Dev.to article card as an SVG with precise typography and un-cropped cover images.
  */
-
-// ---------------------------------------------------------------------------
-// Helpers (same as devto-card.js — kept inline for Vercel serverless compat)
-// ---------------------------------------------------------------------------
 
 /**
  * Fetch a remote image and return it as a base64 data URI.
@@ -65,20 +47,22 @@ function cleanText(str) {
 }
 
 /**
- * Wrap text into multiple lines for SVG rendering (max 3 lines with truncation).
+ * Wrap text into multiple lines for SVG rendering.
+ * Uses 6.8px average char width for 12px Arial Bold to guarantee zero right-edge clipping.
  *
  * @param {string} text The text to wrap.
- * @param {number} usableWidth Width in px available for text.
- * @returns {string[]} Array of line strings (max 3 lines).
+ * @param {number} usableWidth Width in px available for text (default 246px).
+ * @param {number} maxLines Maximum lines allowed (default 2).
+ * @returns {string[]} Array of line strings.
  */
-function wrapText(text, usableWidth = 246) {
+function wrapText(text, usableWidth = 246, maxLines = 2) {
   if (!text) {
     return [""];
   }
   const words = text.split(" ");
   let lines = [];
   let currentLine = "";
-  const charWidth = 5.5;
+  const charWidth = 6.8;
   const maxChars = Math.floor(usableWidth / charWidth);
 
   for (const word of words) {
@@ -96,9 +80,9 @@ function wrapText(text, usableWidth = 246) {
     lines.push(currentLine);
   }
 
-  // Truncate to maximum 3 lines to prevent vertical overlap
-  if (lines.length > 3) {
-    lines = lines.slice(0, 3);
+  // Truncate to maximum allowed lines to prevent vertical overlap
+  if (lines.length > maxLines) {
+    lines = lines.slice(0, maxLines);
     const lastIdx = lines.length - 1;
     if (lines[lastIdx].length > maxChars - 3) {
       lines[lastIdx] = lines[lastIdx].substring(0, maxChars - 3) + "...";
@@ -202,70 +186,78 @@ export default async function handler(req, res) {
       : null;
 
     // --- Build single-card SVG ---
-    const inner = 12; // 12px padding from left edge for clean breathing room
-    const usableWidth = cardW - inner * 2;
+    const inner = 12; // 12px left padding for clean breathing room
+    const usableWidth = cardW - inner * 2; // 246px usable text width
     const hasCover = !!coverDataUri;
     let parts = [];
 
-    // Background
+    // Card Outer Container & Background
     parts.push(
       `<rect x="0" y="0" width="${cardW}" height="${cardH}" rx="8" fill="#1a1a1a" stroke="#53F7AE" stroke-width="1"/>`,
     );
 
-    // Defs for rounded top corners on cover image
-    parts.push(
-      `<defs><clipPath id="coverClip"><rect x="6" y="6" width="${cardW - 12}" height="80" rx="6"/></clipPath></defs>`,
-    );
-
-    // Cover image (Full width header, edge-to-edge slice)
     if (hasCover) {
+      // 1. Full-Width 112px Hero Banner Image (Fits 1000x420 Dev.to banner aspect ratio 100% completely with zero cropping)
+      const imageHeight = 112;
       parts.push(
-        `<image x="6" y="6" width="${cardW - 12}" height="80" href="${coverDataUri}" preserveAspectRatio="xMidYMid slice" clip-path="url(#coverClip)"/>`,
+        `<defs><clipPath id="coverClip"><rect x="6" y="6" width="${cardW - 12}" height="${imageHeight}" rx="6"/></clipPath></defs>`,
       );
-    }
+      parts.push(
+        `<image x="6" y="6" width="${cardW - 12}" height="${imageHeight}" href="${coverDataUri}" preserveAspectRatio="xMidYMid meet" clip-path="url(#coverClip)"/>`,
+      );
 
-    // Centered Pinned Badge
-    if (isPinned) {
-      if (hasCover) {
+      // Centered Pinned Badge Overlay on Banner
+      if (isPinned) {
         parts.push(
-          `<rect x="${cardW / 2 - 42}" y="70" width="84" height="20" rx="10" fill="#1a1a1a" stroke="#53F7AE" stroke-width="1"/>`,
+          `<rect x="${cardW / 2 - 42}" y="98" width="84" height="20" rx="10" fill="#1a1a1a" stroke="#53F7AE" stroke-width="1"/>`,
         );
         parts.push(
-          `<text x="${cardW / 2}" y="84" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#53F7AE" text-anchor="middle">📌 PINNED</text>`,
-        );
-      } else {
-        parts.push(
-          `<rect x="${cardW / 2 - 42}" y="12" width="84" height="26" rx="13" fill="#53F7AE"/>`,
-        );
-        parts.push(
-          `<text x="${cardW / 2}" y="29" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#0d1117" text-anchor="middle">📌 PINNED</text>`,
+          `<text x="${cardW / 2}" y="112" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#53F7AE" text-anchor="middle">📌 PINNED</text>`,
         );
       }
+
+      // Title (Positioned immediately below 112px cover banner)
+      const titleStartY = isPinned ? 132 : 128;
+      const titleColor = isPinned ? "#ffffff" : "#53F7AE";
+      const titleLines = wrapText(article.title, usableWidth, 3); // 3 lines max when cover image present
+      titleLines.forEach((line, i) => {
+        parts.push(
+          `<text x="${inner}" y="${titleStartY + i * 16}" fill="${titleColor}" font-family="Arial, sans-serif" font-size="12" font-weight="bold">${cleanText(line)}</text>`,
+        );
+      });
+    } else {
+      // 2. No Cover Image Layout (Clean, balanced typography card)
+      if (isPinned) {
+        parts.push(
+          `<rect x="${cardW / 2 - 42}" y="16" width="84" height="24" rx="12" fill="#53F7AE"/>`,
+        );
+        parts.push(
+          `<text x="${cardW / 2}" y="32" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#0d1117" text-anchor="middle">📌 PINNED</text>`,
+        );
+      }
+
+      const titleStartY = isPinned ? 62 : 36;
+      const titleColor = isPinned ? "#ffffff" : "#53F7AE";
+      const titleLines = wrapText(article.title, usableWidth, 4); // 4 lines allowed when no cover image
+      titleLines.forEach((line, i) => {
+        parts.push(
+          `<text x="${inner}" y="${titleStartY + i * 18}" fill="${titleColor}" font-family="Arial, sans-serif" font-size="13" font-weight="bold">${cleanText(line)}</text>`,
+        );
+      });
     }
 
-    // Title (Positioned immediately below cover/pinned with zero dead space)
-    const titleStartY = hasCover ? 104 : isPinned ? 52 : 25;
-    const titleColor = isPinned ? "#ffffff" : "#53F7AE";
-    const titleLines = wrapText(article.title, usableWidth);
-    titleLines.forEach((line, i) => {
-      parts.push(
-        `<text x="${inner}" y="${titleStartY + i * 16}" fill="${titleColor}" font-family="Arial, sans-serif" font-size="12" font-weight="bold">${cleanText(line)}</text>`,
-      );
-    });
-
-    // Tags
-    const tagY = hasCover ? 170 : 170;
+    // Tags (Fixed vertical baseline at y=182)
     parts.push(
       renderTags(
         article.tag_list,
         inner,
-        tagY,
+        182,
         9,
         isPinned ? "#53F7AE" : "#888",
       ),
     );
 
-    // Read time + reactions
+    // Read time + reactions footer (y=206)
     const readTime = getReadTime(article.reading_time_minutes);
     const reactions = article.public_reactions_count || 0;
     const metaParts = [`⏱️ ${readTime}`];
@@ -273,14 +265,13 @@ export default async function handler(req, res) {
       metaParts.push(`❤️ ${reactions}`);
     }
     parts.push(
-      `<text x="${inner}" y="${cardH - 12}" fill="#8b949e" font-family="Arial, sans-serif" font-size="10">${metaParts.join("  ·  ")}</text>`,
+      `<text x="${inner}" y="206" fill="#8b949e" font-family="Arial, sans-serif" font-size="10">${metaParts.join("  ·  ")}</text>`,
     );
 
     const svg = `<svg width="${cardW}" height="${cardH}" xmlns="http://www.w3.org/2000/svg">
       ${parts.join("\n      ")}
     </svg>`;
 
-    // Return SVG response
     res.setHeader("Content-Type", "image/svg+xml");
     res.setHeader("Cache-Control", "public, max-age=1800");
     res.setHeader("X-Article-Url", article.url || `https://dev.to/${username}`);
