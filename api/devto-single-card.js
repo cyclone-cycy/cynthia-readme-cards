@@ -139,14 +139,24 @@ export default async function handler(req, res) {
 
   // Resolve article index: query param → Vercel env var → default 1
   let resolvedIndex;
-  if (req.query.index) {
-    resolvedIndex = req.query.index;
-  } else if (isPinned) {
+  // Resolve title override: Vercel env var → none (falls through to the
+  // real article title). Lets a card show a short, editorial title while
+  // the real dev.to post keeps its full, SEO-friendly one -- set from
+  // Vercel's env vars, no commit needed. wrapText() below still applies
+  // either way, so an override is just as safely wrapped/truncated.
+  let titleOverride;
+  if (isPinned) {
     resolvedIndex = process.env.PINNED_ARTICLE_INDEX || "1";
+    titleOverride = process.env.PINNED_TITLE_OVERRIDE;
   } else if (req.query.card === "3") {
     resolvedIndex = process.env.CARD3_ARTICLE_INDEX || "3";
+    titleOverride = process.env.CARD3_TITLE_OVERRIDE;
   } else {
     resolvedIndex = process.env.CARD1_ARTICLE_INDEX || "1";
+    titleOverride = process.env.CARD1_TITLE_OVERRIDE;
+  }
+  if (req.query.index) {
+    resolvedIndex = req.query.index;
   }
   const index = parseInt(resolvedIndex, 10) - 1; // convert 1-based → 0-based
 
@@ -179,6 +189,7 @@ export default async function handler(req, res) {
 
     const article =
       articles[Math.min(index, articles.length - 1)] || articles[0];
+    const displayTitle = titleOverride || article.title;
 
     // --- Fetch cover image as base64 (GitHub CSP blocks external URLs) ---
     const coverDataUri = article.cover_image
@@ -209,7 +220,7 @@ export default async function handler(req, res) {
       // Title (Positioned immediately below 112px cover banner)
       const titleStartY = 128;
       const titleColor = "#53F7AE";
-      const titleLines = wrapText(article.title, usableWidth, 3); // 3 lines max when cover image present
+      const titleLines = wrapText(displayTitle, usableWidth, 3); // 3 lines max when cover image present
       titleLines.forEach((line, i) => {
         parts.push(
           `<text x="${inner}" y="${titleStartY + i * 16}" fill="${titleColor}" font-family="Arial, sans-serif" font-size="12" font-weight="bold">${cleanText(line)}</text>`,
@@ -219,7 +230,7 @@ export default async function handler(req, res) {
       // 2. No Cover Image Layout (Clean, balanced typography card)
       const titleStartY = 36;
       const titleColor = "#53F7AE";
-      const titleLines = wrapText(article.title, usableWidth, 4); // 4 lines allowed when no cover image
+      const titleLines = wrapText(displayTitle, usableWidth, 4); // 4 lines allowed when no cover image
       titleLines.forEach((line, i) => {
         parts.push(
           `<text x="${inner}" y="${titleStartY + i * 18}" fill="${titleColor}" font-family="Arial, sans-serif" font-size="13" font-weight="bold">${cleanText(line)}</text>`,
