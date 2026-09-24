@@ -21,6 +21,7 @@ import devtoRedirect from "./api/devto-redirect.js";
 import githubStatsCard from "./api/github-stats.js";
 import taglineCard from "./api/tagline-card.js";
 import express from "express";
+import { readFileSync } from "fs";
 import { logger } from "./src/common/log.js";
 
 const app = express();
@@ -92,6 +93,19 @@ router.get("/test-error-api", (req, res) => {
 });
 
 app.use("/api", router);
+
+// Serve the comprehensive preview/test page at http://127.0.0.1:9000/test
+app.get("/test", (req, res) => {
+  try {
+    const html = readFileSync("./test-devto-cards.html", "utf8");
+    res.setHeader("Content-Type", "text/html");
+    res.send(html);
+  } catch {
+    res
+      .status(404)
+      .send("Test page not found. Make sure test-devto-cards.html exists.");
+  }
+});
 
 const port = process.env.PORT || process.env.port || 9000;
 app.listen(port, "127.0.0.1", () => {

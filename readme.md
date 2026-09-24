@@ -931,6 +931,7 @@ Since the GitHub API only allows 5k requests per hour, my `https://github-readme
 3.  Run `npm i` if needed (initial setup)
 4.  Run `node express.js` to start the server, or set the entry point to `express.js` in `package.json` if you're deploying on a managed service
     <https://github.com/anuraghazra/github-readme-stats/blob/ba7c2f8b55eac8452e479c8bd38b044d204d0424/package.json#L11>
+4b. Open `http://127.0.0.1:9000/test` in your browser to see a live preview of all README cards (stats, languages, blog cards, streak, trophies) in both dark and light mode — served by `test-devto-cards.html`
 5.  You're done 🎉
     </details>
 
