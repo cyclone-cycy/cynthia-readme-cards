@@ -1,6 +1,8 @@
 /**
  * @module DevToSingleCardAPI
  * @description Renders a SINGLE Dev.to article card as an SVG with precise typography and un-cropped cover images.
+ *              Supports both index-based and URL-based article selection.
+ *              Automatically adapts to GitHub light/dark mode via CSS prefers-color-scheme.
  */
 
 /**
@@ -95,21 +97,22 @@ function wrapText(text, usableWidth = 246, maxLines = 2) {
 }
 
 /**
- * Render tags as a single SVG text element.
+ * Render tags as SVG text elements using CSS classes for theme support.
  *
  * @param {string[]} tagList Tag names.
  * @param {number} x X coordinate.
  * @param {number} y Y coordinate.
  * @param {number} fontSize Font size.
- * @param {string} color Fill colour.
+ * @param {boolean} isPinned Whether this is the pinned card (accent colour for tags).
  * @returns {string} SVG markup.
  */
-function renderTags(tagList, x, y, fontSize = 9, color = "#888") {
+function renderTags(tagList, x, y, fontSize = 9, isPinned = false) {
   if (!tagList || tagList.length === 0) {
     return "";
   }
   const tags = tagList.map((t) => `#${t}`).join(" ");
-  return `<text x="${x}" y="${y}" fill="${color}" font-family="Arial, sans-serif" font-size="${fontSize}">${cleanText(tags)}</text>`;
+  const cssClass = isPinned ? "tag-accent" : "tag-muted";
+  return `<text x="${x}" y="${y}" class="${cssClass}" font-family="Arial, sans-serif" font-size="${fontSize}">${cleanText(tags)}</text>`;
 }
 
 /**
@@ -121,6 +124,94 @@ function renderTags(tagList, x, y, fontSize = 9, color = "#888") {
 function getReadTime(minutes) {
   return `${minutes || 1} min read`;
 }
+
+/**
+ * Resolve which article to display.
+ * Priority: explicit URL → explicit index param → env URL → env index → default index.
+ *
+ * @param {object} query  Request query params.
+ * @param {boolean} isPinned Whether the pinned card is being rendered.
+ * @param {string[]} articles Full list of articles from the Dev.to API.
+ * @returns {object} The resolved article object.
+ */
+function resolveArticle(query, isPinned, articles) {
+  // 1. Explicit ?url= query param always wins
+  if (query.url) {
+    const found = articles.find(
+      (a) => a.url === query.url || a.canonical_url === query.url,
+    );
+    if (found) {
+      return found;
+    }
+  }
+
+  // 2. Explicit ?index= query param
+  if (query.index) {
+    const idx = parseInt(query.index, 10) - 1;
+    return articles[Math.min(idx, articles.length - 1)] || articles[0];
+  }
+
+  // 3. Environment variable URL (for pinned card and card 3)
+  if (isPinned && process.env.PINNED_ARTICLE_URL) {
+    const found = articles.find(
+      (a) =>
+        a.url === process.env.PINNED_ARTICLE_URL ||
+        a.canonical_url === process.env.PINNED_ARTICLE_URL,
+    );
+    if (found) {
+      return found;
+    }
+  }
+
+  if (query.card === "3" && process.env.CARD3_ARTICLE_URL) {
+    const found = articles.find(
+      (a) =>
+        a.url === process.env.CARD3_ARTICLE_URL ||
+        a.canonical_url === process.env.CARD3_ARTICLE_URL,
+    );
+    if (found) {
+      return found;
+    }
+  }
+
+  // 4. Fall back to environment variable index
+  let resolvedIndex;
+  if (isPinned) {
+    resolvedIndex = process.env.PINNED_ARTICLE_INDEX || "1";
+  } else if (query.card === "3") {
+    resolvedIndex = process.env.CARD3_ARTICLE_INDEX || "3";
+  } else {
+    resolvedIndex = process.env.CARD1_ARTICLE_INDEX || "1";
+  }
+
+  const idx = parseInt(resolvedIndex, 10) - 1;
+  return articles[Math.min(idx, articles.length - 1)] || articles[0];
+}
+
+// ---------------------------------------------------------------------------
+// Adaptive colour tokens — referenced by CSS classes inside the SVG <style>
+// Dark mode: #1a1a1a bg, white/green text  |  Light mode: #f6f8fa bg, dark text
+// ---------------------------------------------------------------------------
+
+const SVG_STYLES = `<style>
+  /* ── Dark mode (default) ─────────────────────────────────────── */
+  .card-bg   { fill: #1a1a1a; }
+  .card-border { stroke: #53F7AE; }
+  .title     { fill: #53F7AE; }
+  .tag-accent { fill: #53F7AE; }
+  .tag-muted  { fill: #888888; }
+  .meta      { fill: #8b949e; }
+
+  /* ── Light mode override ─────────────────────────────────────── */
+  @media (prefers-color-scheme: light) {
+    .card-bg   { fill: #f6f8fa; }
+    .card-border { stroke: #1a7f5a; }
+    .title     { fill: #0a6644; }
+    .tag-accent { fill: #0a6644; }
+    .tag-muted  { fill: #57606a; }
+    .meta      { fill: #57606a; }
+  }
+</style>`;
 
 // ---------------------------------------------------------------------------
 // Main handler
@@ -137,19 +228,6 @@ export default async function handler(req, res) {
   const username = req.query.username || process.env.DEVTO_USERNAME;
   const isPinned = req.query.pinned === "true";
 
-  // Resolve article index: query param → Vercel env var → default 1
-  let resolvedIndex;
-  if (req.query.index) {
-    resolvedIndex = req.query.index;
-  } else if (isPinned) {
-    resolvedIndex = process.env.PINNED_ARTICLE_INDEX || "1";
-  } else if (req.query.card === "3") {
-    resolvedIndex = process.env.CARD3_ARTICLE_INDEX || "3";
-  } else {
-    resolvedIndex = process.env.CARD1_ARTICLE_INDEX || "1";
-  }
-  const index = parseInt(resolvedIndex, 10) - 1; // convert 1-based → 0-based
-
   const cardW = parseInt(req.query.width || "270", 10);
   const cardH = parseInt(req.query.height || "220", 10);
   const showReactions = req.query.reactions !== "false";
@@ -158,7 +236,8 @@ export default async function handler(req, res) {
     res.setHeader("Content-Type", "image/svg+xml");
     return res.status(200).send(
       `<svg width="${cardW}" height="${cardH}" xmlns="http://www.w3.org/2000/svg">
-        <rect width="${cardW}" height="${cardH}" fill="#1a1a1a" rx="8"/>
+        ${SVG_STYLES}
+        <rect class="card-bg" width="${cardW}" height="${cardH}" rx="8"/>
         <text x="${cardW / 2}" y="${cardH / 2}" text-anchor="middle" fill="#f85149" font-family="Arial,sans-serif" font-size="11">Missing username</text>
       </svg>`,
     );
@@ -177,8 +256,7 @@ export default async function handler(req, res) {
       throw new Error("No articles");
     }
 
-    const article =
-      articles[Math.min(index, articles.length - 1)] || articles[0];
+    const article = resolveArticle(req.query, isPinned, articles);
 
     // --- Fetch cover image as base64 (GitHub CSP blocks external URLs) ---
     const coverDataUri = article.cover_image
@@ -191,9 +269,12 @@ export default async function handler(req, res) {
     const hasCover = !!coverDataUri;
     let parts = [];
 
-    // Card Outer Container & Background
+    // Inject adaptive CSS styles
+    parts.push(SVG_STYLES);
+
+    // Card Outer Container & Background (uses CSS class for theme-adaptive colour)
     parts.push(
-      `<rect x="0" y="0" width="${cardW}" height="${cardH}" rx="8" fill="#1a1a1a" stroke="#53F7AE" stroke-width="1"/>`,
+      `<rect x="0" y="0" width="${cardW}" height="${cardH}" rx="8" class="card-bg card-border" stroke-width="1"/>`,
     );
 
     if (hasCover) {
@@ -208,35 +289,25 @@ export default async function handler(req, res) {
 
       // Title (Positioned immediately below 112px cover banner)
       const titleStartY = 128;
-      const titleColor = "#53F7AE";
       const titleLines = wrapText(article.title, usableWidth, 3); // 3 lines max when cover image present
       titleLines.forEach((line, i) => {
         parts.push(
-          `<text x="${inner}" y="${titleStartY + i * 16}" fill="${titleColor}" font-family="Arial, sans-serif" font-size="12" font-weight="bold">${cleanText(line)}</text>`,
+          `<text x="${inner}" y="${titleStartY + i * 16}" class="title" font-family="Arial, sans-serif" font-size="12" font-weight="bold">${cleanText(line)}</text>`,
         );
       });
     } else {
       // 2. No Cover Image Layout (Clean, balanced typography card)
       const titleStartY = 36;
-      const titleColor = "#53F7AE";
       const titleLines = wrapText(article.title, usableWidth, 4); // 4 lines allowed when no cover image
       titleLines.forEach((line, i) => {
         parts.push(
-          `<text x="${inner}" y="${titleStartY + i * 18}" fill="${titleColor}" font-family="Arial, sans-serif" font-size="13" font-weight="bold">${cleanText(line)}</text>`,
+          `<text x="${inner}" y="${titleStartY + i * 18}" class="title" font-family="Arial, sans-serif" font-size="13" font-weight="bold">${cleanText(line)}</text>`,
         );
       });
     }
 
     // Tags (Fixed vertical baseline at y=182)
-    parts.push(
-      renderTags(
-        article.tag_list,
-        inner,
-        182,
-        9,
-        isPinned ? "#53F7AE" : "#888",
-      ),
-    );
+    parts.push(renderTags(article.tag_list, inner, 182, 9, isPinned));
 
     // Read time + reactions footer (y=206)
     const readTime = getReadTime(article.reading_time_minutes);
@@ -246,7 +317,7 @@ export default async function handler(req, res) {
       metaParts.push(`❤️ ${reactions}`);
     }
     parts.push(
-      `<text x="${inner}" y="206" fill="#8b949e" font-family="Arial, sans-serif" font-size="10">${metaParts.join("  ·  ")}</text>`,
+      `<text x="${inner}" y="206" class="meta" font-family="Arial, sans-serif" font-size="10">${metaParts.join("  ·  ")}</text>`,
     );
 
     const svg = `<svg width="${cardW}" height="${cardH}" xmlns="http://www.w3.org/2000/svg">
@@ -262,7 +333,8 @@ export default async function handler(req, res) {
     res.setHeader("Content-Type", "image/svg+xml");
     return res.status(200).send(
       `<svg width="${cardW}" height="${cardH}" xmlns="http://www.w3.org/2000/svg">
-        <rect width="${cardW}" height="${cardH}" fill="#1a1a1a" stroke="#f85149" stroke-width="1" rx="8"/>
+        ${SVG_STYLES}
+        <rect class="card-bg" width="${cardW}" height="${cardH}" stroke="#f85149" stroke-width="1" rx="8"/>
         <text x="${cardW / 2}" y="${cardH / 2}" text-anchor="middle" fill="#f85149" font-family="Arial,sans-serif" font-size="11">Article unavailable</text>
       </svg>`,
     );

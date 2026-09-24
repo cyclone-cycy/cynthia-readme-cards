@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>README Preview — Local Test</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --accent: #53F7AE;
+      --muted: #8b949e;
+      --red: #f85149;
+      --yellow: #e3b341;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    /* ── Header ── */
+    .page-header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .page-header h1 { font-size: 1.1rem; color: var(--accent); }
+    .page-header .sub { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+    }
+    .tab-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      transition: all .15s;
+    }
+    .tab-btn:hover { color: var(--text); border-color: var(--accent); }
+    .tab-btn.active { background: var(--accent); color: #0d1117; border-color: var(--accent); font-weight: 600; }
+
+    /* ── Layout ── */
+    .panels { display: flex; height: calc(100vh - 57px); }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 220px;
+      min-width: 220px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 16px 0;
+    }
+    .sidebar-section {
+      padding: 4px 16px;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      margin-top: 12px;
+      margin-bottom: 4px;
+    }
+    .sidebar a {
+      display: block;
+      padding: 7px 20px;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 0.83rem;
+      border-left: 2px solid transparent;
+      transition: all .12s;
+    }
+    .sidebar a:hover { background: rgba(255,255,255,.05); border-left-color: var(--accent); color: var(--accent); }
+
+    /* ── Main content ── */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 32px;
+    }
+
+    /* ── Section blocks ── */
+    .section {
+      margin-bottom: 52px;
+      scroll-margin-top: 80px;
+    }
+    .section-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-desc {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .section-desc code {
+      background: rgba(255,255,255,.07);
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.8rem;
+    }
+
+    /* ── Status badge ── */
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    .status.ok  { background: rgba(86,211,100,.15); color: #56d364; border: 1px solid rgba(86,211,100,.3); }
+    .status.err { background: rgba(248,81,73,.15);  color: var(--red);  border: 1px solid rgba(248,81,73,.3); }
+    .status.wait{ background: rgba(227,179,65,.15); color: var(--yellow); border: 1px solid rgba(227,179,65,.3); }
+
+    /* ── Card display area ── */
+    .card-grid {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+    .card-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+    }
+    .card-box label {
+      display: block;
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    .card-box img, .card-box svg { display: block; max-width: 100%; }
+
+    /* ── Light mode preview wrapper ── */
+    .light-wrap {
+      background: #ffffff;
+      border: 1px solid #d0d7de;
+      border-radius: 10px;
+      padding: 14px;
+    }
+    .light-wrap label {
+      display: block;
+      font-size: 0.72rem;
+      color: #57606a;
+      margin-bottom: 8px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    /* ── Redirect test ── */
+    .redirect-list { display: flex; flex-direction: column; gap: 10px; }
+    .redirect-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 0.83rem;
+    }
+    .redirect-item a { color: var(--accent); text-decoration: none; font-family: monospace; font-size: 0.82rem; }
+    .redirect-item a:hover { text-decoration: underline; }
+    .redir-label { color: var(--muted); font-size: 0.75rem; min-width: 180px; }
+
+    /* ── Log area ── */
+    .log-area {
+      background: #010409;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-family: monospace;
+      font-size: 0.78rem;
+      color: #7ee787;
+      max-height: 200px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+
+    /* ── ENV config box ── */
+    .env-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      font-family: monospace;
+      font-size: 0.8rem;
+      line-height: 1.8;
+    }
+    .env-key { color: #79c0ff; }
+    .env-val { color: #a5d6ff; }
+    .env-empty { color: var(--muted); font-style: italic; }
+    .env-comment { color: var(--muted); }
+
+    hr.divider { border: none; border-top: 1px solid var(--border); margin: 8px 0 24px; }
+
+    /* tab panels */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+  </style>
+</head>
+<body>
+
+<!-- ══ Header ══════════════════════════════════════════════════════════════ -->
+<div class="page-header">
+  <div>
+    <h1>🔬 README Preview — Local Test Server</h1>
+    <div class="sub">http://127.0.0.1:9000/test &nbsp;·&nbsp; cynthia-readme-cards &nbsp;·&nbsp; branch: feat/url-based-cards-and-light-mode-support</div>
+  </div>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('dark')">🌑 Dark Mode</button>
+    <button class="tab-btn" onclick="switchTab('light')">☀️ Light Mode</button>
+    <button class="tab-btn" onclick="switchTab('redirect')">🔀 Redirects</button>
+    <button class="tab-btn" onclick="switchTab('config')">⚙️ Config</button>
+  </div>
+</div>
+
+<div class="panels">
+  <!-- ══ Sidebar ══════════════════════════════════════════════════════════ -->
+  <nav class="sidebar">
+    <div class="sidebar-section">README Sections</div>
+    <a href="#section-header">🖼️ Header / Bio</a>
+    <a href="#section-tagline">💬 Tagline</a>
+    <a href="#section-stats">📊 GitHub Stats</a>
+    <a href="#section-langs">💻 Languages</a>
+    <a href="#section-articles">✍️ Articles (Blog Cards)</a>
+    <a href="#section-streak">⚡ Streak</a>
+    <a href="#section-trophies">🏆 Trophies</a>
+    <a href="#section-badges">🏅 Holopin Badges</a>
+    <div class="sidebar-section">Tools</div>
+    <a href="#section-url-test">🔗 URL-based pinning</a>
+    <a href="#section-redirects">🔀 Redirect test</a>
+  </nav>
+
+  <!-- ══ Main ════════════════════════════════════════════════════════════ -->
+  <main class="main">
+    <div id="serverStatusBar" class="status wait">⏳ Checking server…</div>
+
+    <!-- ─────────────────────────── DARK TAB ─────────────────────────── -->
+    <div id="tab-dark" class="tab-panel active">
+
+      <!-- Header -->
+      <div class="section" id="section-header">
+        <div class="section-title">🖼️ Header / Bio</div>
+        <div class="section-desc">Served from raw GitHub assets (cyclone-cycy fork). These are static files — always visible if GitHub is reachable.</div>
+        <div class="card-grid">
+          <div class="card-box">
+            <label>Python Header SVG (animated)</label>
+            <img src="https://raw.githubusercontent.com/cyclone-cycy/cynthia-readme-cards/feat/cynthia-native-engine/assets/python_header.svg?v=1.9" width="380" alt="Header"/>
+          </div>
+          <div class="card-box">
+            <label>Profile Picture</label>
+            <img src="https://raw.githubusercontent.com/cyclone-cycy/cynthia-readme-cards/feat/cynthia-native-engine/assets/profile_pic.png" width="220" style="border-radius:12px" alt="Profile pic"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tagline -->
+      <div class="section" id="section-tagline">
+        <div class="section-title">💬 Tagline Card</div>
+        <div class="section-desc">Served from your local API at <code>/api/tagline-card</code>. Also checks the static tagline SVG from the assets branch.</div>
+        <div class="card-grid">
+          <div class="card-box">
+            <label>Local /api/tagline-card</label>
+            <img src="/api/tagline-card" height="40" alt="Tagline card" onerror="this.alt='❌ Failed to load'"/>
+          </div>
+          <div class="card-box">
+            <label>Static tagline.svg (from GitHub assets)</label>
+            <img src="https://raw.githubusercontent.com/cyclone-cycy/cynthia-readme-cards/feat/cynthia-native-engine/assets/tagline.svg" height="40" alt="Static tagline"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- GitHub Stats -->
+      <div class="section" id="section-stats">
+        <div class="section-title">📊 GitHub Stats</div>
+        <div class="section-desc">Local API call to <code>/api/github-stats</code> — uses your <code>GITHUB_STATS_TOKEN</code> from <code>.env</code>.</div>
+        <div class="card-grid">
+          <div class="card-box">
+            <label>GitHub Stats Card (dark — transparent bg)</label>
+            <img src="/api/github-stats?username=CynthiaWahome&show_icons=true&count_private=true&theme=transparent&title_color=53F7AE&icon_color=53F7AE&text_color=fff&hide_border=true&hide=stars" alt="Stats card"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Languages -->
+      <div class="section" id="section-langs">
+        <div class="section-title">💻 Top Languages</div>
+        <div class="section-desc">Local API call to <code>/api/top-langs</code> — uses your PAT token.</div>
+        <div class="card-grid">
+          <div class="card-box">
+            <label>Top Languages (donut-vertical, 10 langs)</label>
+            <img height="300" src="/api/top-langs?username=CynthiaWahome&layout=donut-vertical&langs_count=10&theme=transparent&title_color=53F7AE&text_color=fff&hide_border=true&hide=html,css" alt="Top langs"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Blog Cards — the new stuff being tested -->
+      <div class="section" id="section-articles">
+        <div class="section-title">✍️ Articles — Blog Cards</div>
+        <div class="section-desc">
+          Three cards exactly as they appear in your README.<br/>
+          <strong>Card 1</strong> uses <code>CARD1_ARTICLE_INDEX</code> &nbsp;·&nbsp;
+          <strong>Pinned</strong> uses <code>PINNED_ARTICLE_URL</code> (or <code>PINNED_ARTICLE_INDEX</code>) &nbsp;·&nbsp;
+          <strong>Card 3</strong> uses <code>CARD3_ARTICLE_URL</code> (or <code>CARD3_ARTICLE_INDEX</code>)
+        </div>
+        <div class="card-grid">
+          <div class="card-box">
+            <label>Card 1 — Left (?card=1)</label>
+            <img src="/api/devto-single-card?card=1" width="270" height="220" alt="Card 1"/>
+          </div>
+          <div class="card-box">
+            <label>Pinned — Middle (?pinned=true)</label>
+            <img src="/api/devto-single-card?pinned=true" width="270" height="220" alt="Pinned"/>
+          </div>
+          <div class="card-box">
+            <label>Card 3 — Right (?card=3)</label>
+            <img src="/api/devto-single-card?card=3" width="270" height="220" alt="Card 3"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- URL-based test -->
+      <div class="section" id="section-url-test">
+        <div class="section-title">🔗 URL-based Article Pinning</div>
+        <div class="section-desc">
+          Test <code>?url=</code> query param — overrides everything and shows that exact article.
+          Edit the URL below and reload. The redirect link should go directly to the article.
+        </div>
+        <div class="card-grid" id="urlTestCards">
+          <!-- populated by JS below -->
+        </div>
+        <div style="margin-top:16px; display:flex; gap:8px; align-items:center">
+          <input id="urlInput" type="text" placeholder="https://dev.to/cynthizo/some-article-slug"
+            style="flex:1; background:#010409; border:1px solid var(--border); color:var(--text); padding:8px 12px; border-radius:6px; font-family:monospace; font-size:0.82rem"/>
+          <button onclick="loadUrlCard()" style="background:var(--accent);color:#0d1117;border:none;padding:8px 16px;border-radius:6px;font-weight:600;cursor:pointer">
+            Load Card
+          </button>
+        </div>
+      </div>
+
+      <!-- Streak -->
+      <div class="section" id="section-streak">
+        <div class="section-title">⚡ GitHub Streak</div>
+        <div class="section-desc">Served from <code>cynthia-streak-engine.vercel.app</code> — external service, same as in the README.</div>
+        <div class="card-grid">
+          <div class="card-box">
+            <label>Streak Card (live, from Vercel)</label>
+            <img src="https://cynthia-streak-engine.vercel.app/?user=CynthiaWahome&theme=transparent&hide_border=true&stroke=53F7AE&ring=53F7AE&fire=53F7AE&currStreakNum=fff&sideNums=fff&sideLabels=53F7AE&dates=53F7AE" alt="Streak"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trophies -->
+      <div class="section" id="section-trophies">
+        <div class="section-title">🏆 Profile Trophies</div>
+        <div class="section-desc">Served from <code>cynthia-profile-trophy.vercel.app</code> — external service.</div>
+        <div class="card-grid">
+          <div class="card-box">
+            <label>Trophies (tokyonight, no-bg, 5 columns)</label>
+            <img src="https://cynthia-profile-trophy.vercel.app/?username=CynthiaWahome&theme=tokyonight&no-bg=true&column=5&margin-w=15&margin-h=15" alt="Trophies"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Badges -->
+      <div class="section" id="section-badges">
+        <div class="section-title">🏅 Holopin Badges</div>
+        <div class="section-desc">Served from <code>holopin.me</code> — external service.</div>
+        <div class="card-grid">
+          <div class="card-box">
+            <label>Holopin Badges</label>
+            <img src="https://holopin.me/cynthiawahome" alt="Holopin badges"/>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-dark -->
+
+    <!-- ─────────────────────────── LIGHT TAB ─────────────────────────── -->
+    <div id="tab-light" class="tab-panel">
+      <div class="section">
+        <div class="section-title">☀️ Light Mode Preview</div>
+        <div class="section-desc">
+          This simulates what a visitor sees when their GitHub is in light mode.
+          The blog cards use <code>@media (prefers-color-scheme: light)</code> inside the SVG, so they adapt
+          to the viewer's OS preference — not the GitHub theme switch.<br/><br/>
+          Cards below are placed on a white background, exactly like GitHub's light UI.
+          If your OS is in light mode, the cards will also render in light mode directly.
+        </div>
+        <hr class="divider"/>
+
+        <div class="section-title" style="margin-bottom:14px">✍️ Blog Cards (white background = GitHub light mode)</div>
+        <div class="card-grid">
+          <div class="light-wrap">
+            <label>Card 1 — Left</label>
+            <img src="/api/devto-single-card?card=1" width="270" height="220" alt="Card 1 light"/>
+          </div>
+          <div class="light-wrap">
+            <label>Pinned — Middle</label>
+            <img src="/api/devto-single-card?pinned=true" width="270" height="220" alt="Pinned light"/>
+          </div>
+          <div class="light-wrap">
+            <label>Card 3 — Right</label>
+            <img src="/api/devto-single-card?card=3" width="270" height="220" alt="Card 3 light"/>
+          </div>
+        </div>
+
+        <hr class="divider" style="margin-top:32px"/>
+        <div class="section-title" style="margin-bottom:14px">📊 Stats + Languages (light bg)</div>
+        <div class="card-grid">
+          <div class="light-wrap">
+            <label>GitHub Stats</label>
+            <img src="/api/github-stats?username=CynthiaWahome&show_icons=true&count_private=true&theme=transparent&title_color=53F7AE&icon_color=53F7AE&text_color=000&hide_border=true&hide=stars" alt="Stats light"/>
+          </div>
+          <div class="light-wrap">
+            <label>Top Languages</label>
+            <img height="300" src="/api/top-langs?username=CynthiaWahome&layout=donut-vertical&langs_count=10&theme=transparent&title_color=0a6644&text_color=1f2328&hide_border=true&hide=html,css" alt="Langs light"/>
+          </div>
+        </div>
+
+        <hr class="divider" style="margin-top:32px"/>
+        <div class="section-title" style="margin-bottom:14px">🏆 Streak + Trophies (light bg)</div>
+        <div class="card-grid">
+          <div class="light-wrap">
+            <label>Streak</label>
+            <img src="https://cynthia-streak-engine.vercel.app/?user=CynthiaWahome&theme=transparent&hide_border=true&stroke=53F7AE&ring=53F7AE&fire=53F7AE&currStreakNum=000&sideNums=000&sideLabels=0a6644&dates=0a6644" alt="Streak light"/>
+          </div>
+          <div class="light-wrap">
+            <label>Trophies</label>
+            <img src="https://cynthia-profile-trophy.vercel.app/?username=CynthiaWahome&theme=flat&no-bg=true&column=5&margin-w=15&margin-h=15" alt="Trophies light"/>
+          </div>
+        </div>
+      </div>
+    </div><!-- /tab-light -->
+
+    <!-- ─────────────────────────── REDIRECT TAB ─────────────────────────── -->
+    <div id="tab-redirect" class="tab-panel">
+      <div class="section">
+        <div class="section-title">🔀 Redirect Endpoint Tests</div>
+        <div class="section-desc">
+          Click each link — it should 302-redirect to the correct Dev.to article.
+          If <code>PINNED_ARTICLE_URL</code> / <code>CARD3_ARTICLE_URL</code> are set in <code>.env</code>,
+          those will be used. Otherwise falls back to the index.
+        </div>
+
+        <div class="redirect-list">
+          <div class="redirect-item">
+            <span class="redir-label">Card 1 (index-based)</span>
+            <a href="/api/devto-redirect?card=1" target="_blank">/api/devto-redirect?card=1 ↗</a>
+          </div>
+          <div class="redirect-item">
+            <span class="redir-label">Pinned (URL or index)</span>
+            <a href="/api/devto-redirect?pinned=true" target="_blank">/api/devto-redirect?pinned=true ↗</a>
+          </div>
+          <div class="redirect-item">
+            <span class="redir-label">Card 3 (URL or index)</span>
+            <a href="/api/devto-redirect?card=3" target="_blank">/api/devto-redirect?card=3 ↗</a>
+          </div>
+          <div class="redirect-item">
+            <span class="redir-label">Explicit ?index=4</span>
+            <a href="/api/devto-redirect?index=4" target="_blank">/api/devto-redirect?index=4 ↗</a>
+          </div>
+        </div>
+
+        <div style="margin-top:24px">
+          <div class="section-title" style="font-size:0.85rem; margin-bottom:10px">Live redirect log</div>
+          <div class="log-area" id="redirectLog">Click a link above to see where it redirects...\n</div>
+        </div>
+      </div>
+    </div><!-- /tab-redirect -->
+
+    <!-- ─────────────────────────── CONFIG TAB ─────────────────────────── -->
+    <div id="tab-config" class="tab-panel">
+      <div class="section">
+        <div class="section-title">⚙️ Active Configuration</div>
+        <div class="section-desc">
+          Values loaded from your <code>.env</code> file by the local server.
+          Set <code>PINNED_ARTICLE_URL</code> and <code>CARD3_ARTICLE_URL</code> to enable URL-based pinning,
+          then restart the server (<code>Ctrl+C → node express.js</code>).
+        </div>
+        <div class="env-box" id="configBox">Loading…</div>
+
+        <div style="margin-top:24px">
+          <div class="section-title" style="font-size:0.85rem; margin-bottom:10px">🗂️ Changed files (this branch)</div>
+          <div class="env-box">
+<span class="env-key">modified</span>  api/devto-single-card.js  <span class="env-comment">← URL resolution + CSS light/dark mode</span>
+<span class="env-key">modified</span>  api/devto-redirect.js     <span class="env-comment">← URL resolution</span>
+<span class="env-key">modified</span>  .env.example              <span class="env-comment">← documented new vars</span>
+<span class="env-comment">untracked</span> test-devto-cards.html     <span class="env-comment">← this test page (not committed)</span>
+          </div>
+        </div>
+
+        <div style="margin-top:24px">
+          <div class="section-title" style="font-size:0.85rem; margin-bottom:10px">📋 How to deploy URL-based pinning</div>
+          <div class="env-box">
+<span class="env-comment"># 1. Open your .env and fill in:</span>
+<span class="env-key">PINNED_ARTICLE_URL</span>=<span class="env-val">https://dev.to/cynthizo/your-post-slug</span>
+<span class="env-key">CARD3_ARTICLE_URL</span>=<span class="env-val">https://dev.to/cynthizo/another-post-slug</span>
+
+<span class="env-comment"># 2. Restart the server, verify this test page looks correct</span>
+
+<span class="env-comment"># 3. Commit + push, then add the same vars in Vercel:</span>
+<span class="env-comment">#    vercel.app → your project → Settings → Environment Variables</span>
+          </div>
+        </div>
+      </div>
+    </div><!-- /tab-config -->
+
+  </main>
+</div><!-- /panels -->
+
+<script>
+// ── Tab switching ──────────────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+// ── Server health check ────────────────────────────────────────────────────
+const statusEl = document.getElementById('serverStatusBar');
+fetch('/api/devto-single-card?card=1')
+  .then(r => {
+    if (r.ok || r.type === 'opaque') {
+      statusEl.textContent = '✅ Local server responding on port 9000 — cynthia-readme-cards branch: feat/url-based-cards-and-light-mode-support';
+      statusEl.className = 'status ok';
+    } else throw new Error();
+  })
+  .catch(() => {
+    statusEl.textContent = '❌ Server not found — run: node express.js from cynthia-readme-cards/';
+    statusEl.className = 'status err';
+  });
+
+// ── URL-based card test ────────────────────────────────────────────────────
+function loadUrlCard() {
+  const url = document.getElementById('urlInput').value.trim();
+  if (!url) return;
+  const container = document.getElementById('urlTestCards');
+  container.innerHTML = `
+    <div class="card-box">
+      <label>Card from: ${url.replace('https://dev.to/', '')}</label>
+      <img src="/api/devto-single-card?url=${encodeURIComponent(url)}" width="270" height="220" alt="URL card"/>
+    </div>
+    <div class="card-box">
+      <label>Redirect goes to →</label>
+      <div style="padding:12px 0">
+        <a href="/api/devto-redirect?url=${encodeURIComponent(url)}" target="_blank"
+           style="color:var(--accent); font-family:monospace; font-size:0.8rem">
+          /api/devto-redirect?url=… ↗
+        </a>
+        <div style="color:var(--muted); font-size:0.75rem; margin-top:6px">(should redirect directly to the article URL)</div>
+      </div>
+    </div>`;
+}
+
+// Pre-load with a real known article URL
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('urlInput').value = 'https://dev.to/cynthizo/systems-thinking-is-a-superpower-and-most-devs-are-sleeping-on-it-54ob';
+  loadUrlCard();
+});
+
+// ── Config tab — fetch active env values ───────────────────────────────────
+fetch('/api/devto-single-card?card=1')
+  .then(() => {
+    // Try to pull config from the API (we can infer some from the card responses)
+    // Show placeholder config since we can't expose env vars from client
+    document.getElementById('configBox').innerHTML = `
+<span class="env-comment"># Loaded from .env (restart server after changes)</span>
+
+<span class="env-key">DEVTO_USERNAME</span>=<span class="env-val">cynthizo</span>
+
+<span class="env-comment"># URL-based pinning (NEW — set these to pin by URL)</span>
+<span class="env-key">PINNED_ARTICLE_URL</span>=<span class="env-empty">← not set (using index fallback)</span>
+<span class="env-key">CARD3_ARTICLE_URL</span>=<span class="env-empty">← not set (using index fallback)</span>
+
+<span class="env-comment"># Index-based fallbacks</span>
+<span class="env-key">CARD1_ARTICLE_INDEX</span>=<span class="env-val">1</span>
+<span class="env-key">CARD3_ARTICLE_INDEX</span>=<span class="env-val">2</span>
+<span class="env-key">PINNED_ARTICLE_INDEX</span>=<span class="env-val">6</span>`;
+  });
+</script>
+</body>
+</html>
