@@ -174,14 +174,17 @@ function resolveArticle(query, isPinned, articles) {
     }
   }
 
-  // 4. Fall back to environment variable index
+  // 4. Fixed layout fallback:
+  //    Card 1 (left)   → always index 1 (most recent)
+  //    Pinned (middle) → PINNED_ARTICLE_INDEX env var, or index 1
+  //    Card 3 (right)  → always index 3 (no env var — use CARD3_ARTICLE_URL instead)
   let resolvedIndex;
   if (isPinned) {
     resolvedIndex = process.env.PINNED_ARTICLE_INDEX || "1";
   } else if (query.card === "3") {
-    resolvedIndex = process.env.CARD3_ARTICLE_INDEX || "3";
+    resolvedIndex = "3";
   } else {
-    resolvedIndex = process.env.CARD1_ARTICLE_INDEX || "1";
+    resolvedIndex = "1";
   }
 
   const idx = parseInt(resolvedIndex, 10) - 1;

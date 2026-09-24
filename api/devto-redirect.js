@@ -86,16 +86,19 @@ export default async function handler(req, res) {
       return res.redirect(302, process.env.CARD3_ARTICLE_URL);
     }
 
-    // 3. Index-based resolution (explicit ?index param or env var)
+    // 3. Fixed layout index fallback:
+    //    Card 1 (left)   → always index 1 (most recent)
+    //    Pinned (middle) → PINNED_ARTICLE_INDEX env var, or index 1
+    //    Card 3 (right)  → always index 3 (use CARD3_ARTICLE_URL instead)
     let resolvedIndex;
     if (req.query.index) {
       resolvedIndex = req.query.index;
     } else if (isPinned) {
       resolvedIndex = process.env.PINNED_ARTICLE_INDEX || "1";
     } else if (req.query.card === "3") {
-      resolvedIndex = process.env.CARD3_ARTICLE_INDEX || "3";
+      resolvedIndex = "3";
     } else {
-      resolvedIndex = process.env.CARD1_ARTICLE_INDEX || "1";
+      resolvedIndex = "1";
     }
     const index = parseInt(resolvedIndex, 10) - 1;
 
