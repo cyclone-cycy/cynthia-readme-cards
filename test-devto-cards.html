@@ -251,8 +251,8 @@
     <div class="sidebar-section">README Sections</div>
     <a href="#section-header">🖼️ Header / Bio</a>
     <a href="#section-tagline">💬 Tagline</a>
-    <a href="#section-stats">📊 GitHub Stats</a>
-    <a href="#section-langs">💻 Languages</a>
+    <a href="#section-stats">📊 Stats + Languages</a>
+    <a href="#section-daily-tip">🧠 Scar Tissue (Daily Tip)</a>
     <a href="#section-articles">✍️ Articles (Blog Cards)</a>
     <a href="#section-streak">⚡ Streak</a>
     <a href="#section-trophies">🏆 Trophies</a>
@@ -301,27 +301,26 @@
         </div>
       </div>
 
-      <!-- GitHub Stats -->
+      <!-- Stats + Languages (side-by-side) -->
       <div class="section" id="section-stats">
-        <div class="section-title">📊 GitHub Stats</div>
-        <div class="section-desc">Local API call to <code>/api/github-stats</code> — uses your <code>GITHUB_STATS_TOKEN</code> from <code>.env</code>.</div>
-        <div class="card-grid">
-          <div class="card-box">
-            <label>GitHub Stats Card (dark — transparent bg)</label>
-            <img src="/api/github-stats?username=CynthiaWahome&show_icons=true&count_private=true&theme=transparent&title_color=53F7AE&icon_color=53F7AE&text_color=fff&hide_border=true&hide=stars" alt="Stats card"/>
+        <div class="section-title">📊 GitHub Stats + 💻 Top Languages</div>
+        <div class="section-desc">Stats + Languages side-by-side — exactly how they sit in the README.</div>
+        <div class="card-box" style="display: flex; flex-direction: row; gap: 16px; justify-content: center; align-items: center; overflow: hidden;">
+          <div style="flex: 1 1 50%; min-width: 0; display: flex; flex-direction: column; align-items: center;">
+            <label style="align-self: flex-start;">GitHub Stats Card</label>
+            <img src="/api/github-stats?username=CynthiaWahome&show_icons=true&count_private=true&theme=transparent&title_color=53F7AE&icon_color=53F7AE&text_color=fff&hide_border=true&hide=stars" alt="Stats card" style="max-width: 100%; height: auto; max-height: 220px; object-fit: contain;"/>
+          </div>
+          <div style="flex: 1 1 50%; min-width: 0; display: flex; flex-direction: column; align-items: center;">
+            <label style="align-self: flex-start;">Top Languages (donut-vertical, 10 langs)</label>
+            <img src="/api/top-langs?username=CynthiaWahome&layout=donut-vertical&langs_count=10&theme=transparent&title_color=53F7AE&text_color=fff&hide_border=true&hide=html,css" alt="Top langs" style="max-width: 100%; height: auto; max-height: 220px; object-fit: contain;"/>
           </div>
         </div>
       </div>
 
-      <!-- Languages -->
-      <div class="section" id="section-langs">
-        <div class="section-title">💻 Top Languages</div>
-        <div class="section-desc">Local API call to <code>/api/top-langs</code> — uses your PAT token.</div>
-        <div class="card-grid">
-          <div class="card-box">
-            <label>Top Languages (donut-vertical, 10 langs)</label>
-            <img height="300" src="/api/top-langs?username=CynthiaWahome&layout=donut-vertical&langs_count=10&theme=transparent&title_color=53F7AE&text_color=fff&hide_border=true&hide=html,css" alt="Top langs"/>
-          </div>
+      <!-- Daily Tip (standalone hero banner, centered below Stats + Languages) -->
+      <div class="section" id="section-daily-tip">
+        <div style="display: flex; justify-content: center;">
+          <img src="/api/daily-tip" alt="Scar Tissue — Lessons That Left a Mark" style="max-width: 100%;"/>
         </div>
       </div>
 
@@ -438,15 +437,20 @@
 
         <hr class="divider" style="margin-top:32px"/>
         <div class="section-title" style="margin-bottom:14px">📊 Stats + Languages (light bg)</div>
-        <div class="card-grid">
-          <div class="light-wrap">
-            <label>GitHub Stats</label>
-            <img src="/api/github-stats?username=CynthiaWahome&show_icons=true&count_private=true&theme=transparent&title_color=53F7AE&icon_color=53F7AE&text_color=000&hide_border=true&hide=stars" alt="Stats light"/>
+        <div class="light-wrap" style="display: flex; flex-direction: row; gap: 16px; justify-content: center; align-items: center; overflow: hidden;">
+          <div style="flex: 1 1 50%; min-width: 0; display: flex; flex-direction: column; align-items: center;">
+            <label style="align-self: flex-start;">GitHub Stats</label>
+            <img src="/api/github-stats?username=CynthiaWahome&show_icons=true&count_private=true&theme=transparent&title_color=53F7AE&icon_color=53F7AE&text_color=000&hide_border=true&hide=stars" alt="Stats light" style="max-width: 100%; height: auto; max-height: 220px; object-fit: contain;"/>
           </div>
-          <div class="light-wrap">
-            <label>Top Languages</label>
-            <img height="300" src="/api/top-langs?username=CynthiaWahome&layout=donut-vertical&langs_count=10&theme=transparent&title_color=0a6644&text_color=1f2328&hide_border=true&hide=html,css" alt="Langs light"/>
+          <div style="flex: 1 1 50%; min-width: 0; display: flex; flex-direction: column; align-items: center;">
+            <label style="align-self: flex-start;">Top Languages</label>
+            <img src="/api/top-langs?username=CynthiaWahome&layout=donut-vertical&langs_count=10&theme=transparent&title_color=0a6644&text_color=1f2328&hide_border=true&hide=html,css" alt="Langs light" style="max-width: 100%; height: auto; max-height: 220px; object-fit: contain;"/>
           </div>
+        </div>
+
+        <hr class="divider" style="margin-top:32px"/>
+        <div style="display: flex; justify-content: center; background: #ffffff; padding: 20px; border: 1px solid #d0d7de; border-radius: 10px;">
+          <img src="/api/daily-tip" alt="Scar Tissue — Lessons That Left a Mark" style="max-width: 100%;"/>
         </div>
 
         <hr class="divider" style="margin-top:32px"/>

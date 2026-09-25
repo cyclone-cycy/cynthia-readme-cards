@@ -20,6 +20,7 @@ import devtoSingleCard from "./api/devto-single-card.js";
 import devtoRedirect from "./api/devto-redirect.js";
 import githubStatsCard from "./api/github-stats.js";
 import taglineCard from "./api/tagline-card.js";
+import dailyTipCard from "./api/daily-tip.js";
 import express from "express";
 import { readFileSync } from "fs";
 import { logger } from "./src/common/log.js";
@@ -36,6 +37,7 @@ router.get("/devto-single-card", devtoSingleCard);
 router.get("/devto-redirect", devtoRedirect);
 router.get("/github-stats", githubStatsCard);
 router.get("/tagline-card", taglineCard);
+router.get("/daily-tip", dailyTipCard);
 
 // Test error displays
 router.get("/test-error-token", (req, res) => {
