@@ -13,3 +13,4 @@ tests
 .prettierignore
 .pretterrc.json
 codecov.yml
+api/featured-post.js
