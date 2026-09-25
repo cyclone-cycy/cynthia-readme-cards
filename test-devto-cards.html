@@ -301,26 +301,31 @@
         </div>
       </div>
 
-      <!-- Stats + Languages (side-by-side) -->
+      <!-- Stats (centered) -->
       <div class="section" id="section-stats">
-        <div class="section-title">📊 GitHub Stats + 💻 Top Languages</div>
-        <div class="section-desc">Stats + Languages side-by-side — exactly how they sit in the README.</div>
-        <div class="card-box" style="display: flex; flex-direction: row; gap: 16px; justify-content: center; align-items: center; overflow: hidden;">
-          <div style="flex: 1 1 50%; min-width: 0; display: flex; flex-direction: column; align-items: center;">
-            <label style="align-self: flex-start;">GitHub Stats Card</label>
+        <div class="section-title">📊 GitHub Stats</div>
+        <div class="section-desc">GitHub Stats card displayed proudly.</div>
+        <div class="card-box" style="display: flex; justify-content: center; align-items: center; overflow: hidden;">
+          <div style="display: flex; flex-direction: column; align-items: center;">
             <img src="/api/github-stats?username=CynthiaWahome&show_icons=true&count_private=true&theme=transparent&title_color=53F7AE&icon_color=53F7AE&text_color=fff&hide_border=true&hide=stars" alt="Stats card" style="max-width: 100%; height: auto; max-height: 220px; object-fit: contain;"/>
-          </div>
-          <div style="flex: 1 1 50%; min-width: 0; display: flex; flex-direction: column; align-items: center;">
-            <label style="align-self: flex-start;">Top Languages (donut-vertical, 10 langs)</label>
-            <img src="/api/top-langs?username=CynthiaWahome&layout=donut-vertical&langs_count=10&theme=transparent&title_color=53F7AE&text_color=fff&hide_border=true&hide=html,css" alt="Top langs" style="max-width: 100%; height: auto; max-height: 220px; object-fit: contain;"/>
           </div>
         </div>
       </div>
 
-      <!-- Daily Tip (standalone hero banner, centered below Stats + Languages) -->
+      <!-- Tech Stack -->
+      <div class="section" id="section-tech-stack">
+        <div class="section-title">🛠️ Final Tech Stack — Full Width (48 Icons)</div>
+        <div class="section-desc">Here is the absolute final 932px grid. 48 icons at exactly 16 per line, perfectly flush left to match the blog cards width.</div>
+        
+        <div>
+          <img src="https://skillicons.dev/icons?i=go,python,ts,js,nodejs,django,fastapi,express,react,nextjs,graphql,html,css,sass,tailwind,bootstrap,aws,gcp,docker,kubernetes,terraform,linux,ubuntu,bash,nginx,cloudflare,ansible,grafana,git,github,githubactions,vercel,postgres,mongodb,redis,mysql,sqlite,prisma,supabase,firebase,npm,vite,webpack,postman,figma,androidstudio,apple,vscode&perline=16" alt="Massive Tech Wall" style="max-width: 932px;" />
+        </div>
+      </div>
+
+      <!-- Daily Tip (standalone hero banner, perfectly left aligned) -->
       <div class="section" id="section-daily-tip">
-        <div style="display: flex; justify-content: center;">
-          <img src="/api/daily-tip" alt="Scar Tissue — Lessons That Left a Mark" style="max-width: 100%;"/>
+        <div>
+          <img src="/api/daily-tip" alt="Scar Tissue — Lessons That Left a Mark" style="max-width: 932px; width: 100%;"/>
         </div>
       </div>
 
@@ -436,21 +441,16 @@
         </div>
 
         <hr class="divider" style="margin-top:32px"/>
-        <div class="section-title" style="margin-bottom:14px">📊 Stats + Languages (light bg)</div>
-        <div class="light-wrap" style="display: flex; flex-direction: row; gap: 16px; justify-content: center; align-items: center; overflow: hidden;">
-          <div style="flex: 1 1 50%; min-width: 0; display: flex; flex-direction: column; align-items: center;">
-            <label style="align-self: flex-start;">GitHub Stats</label>
-            <img src="/api/github-stats?username=CynthiaWahome&show_icons=true&count_private=true&theme=transparent&title_color=53F7AE&icon_color=53F7AE&text_color=000&hide_border=true&hide=stars" alt="Stats light" style="max-width: 100%; height: auto; max-height: 220px; object-fit: contain;"/>
-          </div>
-          <div style="flex: 1 1 50%; min-width: 0; display: flex; flex-direction: column; align-items: center;">
-            <label style="align-self: flex-start;">Top Languages</label>
-            <img src="/api/top-langs?username=CynthiaWahome&layout=donut-vertical&langs_count=10&theme=transparent&title_color=0a6644&text_color=1f2328&hide_border=true&hide=html,css" alt="Langs light" style="max-width: 100%; height: auto; max-height: 220px; object-fit: contain;"/>
+        <div class="section-title" style="margin-bottom:14px">📊 Stats (light bg)</div>
+        <div class="light-wrap" style="display: flex; justify-content: center; align-items: center; overflow: hidden;">
+          <div style="display: flex; flex-direction: column; align-items: center;">
+            <img src="/api/github-stats?username=CynthiaWahome&show_icons=true&count_private=true&theme=transparent&title_color=0a6644&icon_color=0a6644&text_color=000&hide_border=true&hide=stars" alt="Stats light" style="max-width: 100%; height: auto; max-height: 220px; object-fit: contain;"/>
           </div>
         </div>
 
         <hr class="divider" style="margin-top:32px"/>
-        <div style="display: flex; justify-content: center; background: #ffffff; padding: 20px; border: 1px solid #d0d7de; border-radius: 10px;">
-          <img src="/api/daily-tip" alt="Scar Tissue — Lessons That Left a Mark" style="max-width: 100%;"/>
+        <div style="background: #ffffff; padding: 20px 0; border-top: 1px solid #d0d7de; border-bottom: 1px solid #d0d7de;">
+          <img src="/api/daily-tip?theme=light" alt="Scar Tissue — Lessons That Left a Mark" style="max-width: 932px; width: 100%;"/>
         </div>
 
         <hr class="divider" style="margin-top:32px"/>

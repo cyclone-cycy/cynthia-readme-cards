@@ -125,30 +125,30 @@ export default async function handler(req, res) {
     const tip = tips[tipIndex];
 
     // ── Layout constants ──────────────────────────────────────────
-    const cardW = 800;
-    const bodyLeftX = 50; // Keep start position at 160 (where title/divider start)
-    const bodyRightX = 744; // Extends all the way to the right edge of the red box
-    const usableTextW = bodyRightX - bodyLeftX; // 584px usable text width
-    const maxCharsPerLine = Math.floor(usableTextW / 5.6); // ~104 chars per line to reach right edge with fewer lines
+    const cardW = 932; // Exactly matches the total width of 3 blog cards + padding in the test layout
+    const bodyLeftX = 50; // Keep start position at 50
+    const bodyRightX = 882; // Extends all the way to the right edge (932 - 50)
+    const usableTextW = bodyRightX - bodyLeftX; // 832px usable text width
+    const maxCharsPerLine = Math.floor(usableTextW / 8.5); // ~97 chars per line (adjusted for 18px font)
 
     // ── Wrap text ─────────────────────────────────────────────────
     const titleLines = wrapText(tip.title, maxCharsPerLine, 2);
     const bodyLines = wrapText(tip.text, maxCharsPerLine, 5);
 
     // ── Dynamic height based on actual content ────────────────────
-    const topPad = 26;
-    const labelH = 14; // "SCAR TISSUE" label
-    const labelGap = 12;
-    const titleFontSize = 16;
-    const titleLineH = 22;
+    const topPad = 32;
+    const labelH = 16; // "SCAR TISSUE" label
+    const labelGap = 16;
+    const titleFontSize = 22;
+    const titleLineH = 30;
     const titleBlockH = titleLines.length * titleLineH;
-    const dividerGap = 14;
+    const dividerGap = 18;
     const dividerH = 1;
-    const bodyGap = 14;
-    const bodyFontSize = 13;
-    const bodyLineH = 19;
+    const bodyGap = 18;
+    const bodyFontSize = 18;
+    const bodyLineH = 28;
     const bodyBlockH = bodyLines.length * bodyLineH;
-    const bottomPad = 26;
+    const bottomPad = 32;
 
     const cardH =
       topPad +
@@ -199,7 +199,7 @@ export default async function handler(req, res) {
     // Section label (centered)
     cursorY += labelH;
     parts.push(
-      `<text x="${centerX}" y="${cursorY}" class="tip-label" font-family="Arial, sans-serif" font-size="11" text-anchor="middle">🧠 SCAR TISSUE — LESSONS THAT LEFT A MARK</text>`,
+      `<text x="${centerX}" y="${cursorY}" class="tip-label" font-family="Arial, sans-serif" font-size="13" text-anchor="middle">🧠 SCAR TISSUE — LESSONS THAT LEFT A MARK</text>`,
     );
     cursorY += labelGap;
 
@@ -230,7 +230,7 @@ export default async function handler(req, res) {
 
     // Tip ID (aligned to the right edge of the symmetrical box)
     parts.push(
-      `<text x="${bodyRightX}" y="${cardH - 10}" class="tip-id" font-family="monospace" font-size="9" text-anchor="end">${cleanText(tip.id)}</text>`,
+      `<text x="${bodyRightX}" y="${cardH - 14}" class="tip-id" font-family="monospace" font-size="11" text-anchor="end">${cleanText(tip.id)}</text>`,
     );
 
     const svg = `
