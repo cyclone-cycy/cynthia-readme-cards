@@ -17,30 +17,6 @@ const __dirname = path.dirname(__filename);
 // Dark mode: deep bg, green accents  |  Light mode: soft bg, deep green text
 // ---------------------------------------------------------------------------
 
-const SVG_STYLES = `<style>
-  /* ── Dark mode (default) ─────────────────────────────────────── */
-  .tip-bg         { fill: #0d1117; }
-  .tip-border     { stroke: #30363d; }
-  .tip-accent-bar { fill: #53F7AE; }
-  .tip-label      { fill: #53F7AE; font-weight: bold; letter-spacing: 0.08em; }
-  .tip-title      { fill: #e6edf3; font-weight: bold; }
-  .tip-body       { fill: #8b949e; text-anchor: start; }
-  .tip-divider    { stroke: #21262d; }
-  .tip-id         { fill: #484f58; }
-
-  /* ── Light mode override ─────────────────────────────────────── */
-  @media (prefers-color-scheme: light) {
-    .tip-bg         { fill: #ffffff; }
-    .tip-border     { stroke: #d0d7de; }
-    .tip-accent-bar { fill: #1a7f5a; }
-    .tip-label      { fill: #0a6644; }
-    .tip-title      { fill: #24292f; }
-    .tip-body       { fill: #57606a; }
-    .tip-divider    { stroke: #d8dee4; }
-    .tip-id         { fill: #8c959f; }
-  }
-</style>`;
-
 /**
  * Escape XML-special characters for SVG safety.
  *
@@ -186,6 +162,21 @@ export default async function handler(req, res) {
       bottomPad;
 
     // ── Build SVG parts ───────────────────────────────────────────
+
+    const themeQuery = req.query.theme || "dark";
+    const isLight = themeQuery === "light";
+
+    const SVG_STYLES = `<style>
+      .tip-bg         { fill: ${isLight ? "#ffffff" : "#0d1117"}; }
+      .tip-border     { stroke: ${isLight ? "#d0d7de" : "#30363d"}; }
+      .tip-accent-bar { fill: ${isLight ? "#1a7f5a" : "#53F7AE"}; }
+      .tip-label      { fill: ${isLight ? "#0a6644" : "#53F7AE"}; font-weight: bold; letter-spacing: 0.08em; }
+      .tip-title      { fill: ${isLight ? "#24292f" : "#e6edf3"}; font-weight: bold; }
+      .tip-body       { fill: ${isLight ? "#57606a" : "#8b949e"}; text-anchor: start; }
+      .tip-divider    { stroke: ${isLight ? "#d8dee4" : "#21262d"}; }
+      .tip-id         { fill: ${isLight ? "#8c959f" : "#484f58"}; }
+    </style>`;
+
     let parts = [];
 
     // Inject adaptive CSS
